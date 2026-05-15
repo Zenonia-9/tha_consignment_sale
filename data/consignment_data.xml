@@ -89,9 +89,4 @@
         </record>
     </data>
 
-    <function model="ir.sequence" name="write" eval="([ref('seq_picking_consignment_issue'), ref('seq_picking_consignment_sold'), ref('seq_picking_consignment_return')], {'company_id': False})"/>
-    <function model="stock.picking.type" name="write" eval="([ref('picking_type_consignment_issue'), ref('picking_type_consignment_sold'), ref('picking_type_consignment_return')], {'active': False})"/>
-    <function model="tha.consignment.order" name="_fix_missing_sequences"/>
-    <function model="tha.consignment.settlement" name="_fix_missing_sequences"/>
-    <function model="tha.consignment.return" name="_fix_missing_sequences"/>
 </odoo>

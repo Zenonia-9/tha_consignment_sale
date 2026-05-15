@@ -54,6 +54,10 @@ class ThaConsignmentOrder(models.Model):
             order.commission_amount = sum(line.consignment_subtotal * line.commission_rate / 100.0 for line in order.line_ids)
             order.net_amount = order.amount_total - order.commission_amount
 
+    @api.constrains("name", "company_id")
+    def _check_unique_name(self):
+        self._check_unique_consignment_name()
+
     @api.model_create_multi
     def create(self, vals_list):
         return super().create(vals_list)
@@ -92,13 +96,11 @@ class ThaConsignmentOrder(models.Model):
 
     def _assign_sequence(self):
         if not self.name or self.name in (_("New"), "New"):
-            self.name = self.env["ir.sequence"].next_by_code("tha.consignment.order") or _("New")
-
-    @api.model
-    def _fix_missing_sequences(self):
-        for order in self.search([("name", "in", [False, "New"]), ("state", "!=", "draft")], order="id"):
-            order._assign_sequence()
-        return True
+            self.name = self._next_consignment_sequence(
+                "tha.consignment.order",
+                "tha_consignment_sale.seq_consignment_order",
+                self.date_order,
+            ) or _("New")
 
     def action_cancel(self):
         for order in self:

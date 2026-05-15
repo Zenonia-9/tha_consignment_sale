@@ -1,4 +1,5 @@
-from odoo import models
+from odoo import _, models
+from odoo.exceptions import ValidationError
 
 
 class ThaConsignmentMixin(models.AbstractModel):
@@ -30,6 +31,25 @@ class ThaConsignmentMixin(models.AbstractModel):
 
     def _customer_location(self):
         return self.env.ref("stock.stock_location_customers")
+
+    def _next_consignment_sequence(self, code, sequence_xmlid, sequence_date=False):
+        sequence = self.env["ir.sequence"]
+        name = sequence.next_by_code(code, sequence_date=sequence_date)
+        if name:
+            return name
+        return self.env.ref(sequence_xmlid).sudo().next_by_id(sequence_date=sequence_date)
+
+    def _check_unique_consignment_name(self):
+        for record in self:
+            if not record.name or record.name in ("New", _("New")):
+                continue
+            domain = [
+                ("id", "!=", record.id),
+                ("name", "=", record.name),
+                ("company_id", "=", record.company_id.id),
+            ]
+            if self.search_count(domain):
+                raise ValidationError(_("Document number %s must be unique per company.") % record.name)
 
     def _consignment_picking_type(self, flow, name, code, sequence_code, sequence_xmlid, source_location, destination_location, company=False):
         company = company or self.env.company

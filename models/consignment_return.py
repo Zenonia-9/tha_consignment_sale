@@ -25,6 +25,10 @@ class ThaConsignmentReturn(models.Model):
     picking_id = fields.Many2one("stock.picking", string="Return Transfer", copy=False, readonly=True)
     picking_state = fields.Selection(related="picking_id.state", string="Transfer Status")
 
+    @api.constrains("name", "company_id")
+    def _check_unique_name(self):
+        self._check_unique_consignment_name()
+
     @api.model_create_multi
     def create(self, vals_list):
         return super().create(vals_list)
@@ -49,13 +53,11 @@ class ThaConsignmentReturn(models.Model):
 
     def _assign_sequence(self):
         if not self.name or self.name in (_("New"), "New"):
-            self.name = self.env["ir.sequence"].next_by_code("tha.consignment.return") or _("New")
-
-    @api.model
-    def _fix_missing_sequences(self):
-        for consignment_return in self.search([("name", "in", [False, "New"]), ("state", "!=", "draft")], order="id"):
-            consignment_return._assign_sequence()
-        return True
+            self.name = self._next_consignment_sequence(
+                "tha.consignment.return",
+                "tha_consignment_sale.seq_consignment_return",
+                self.date_return,
+            ) or _("New")
 
     def action_cancel(self):
         for consignment_return in self:
