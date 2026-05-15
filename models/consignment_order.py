@@ -185,7 +185,13 @@ class ThaConsignmentOrderLine(models.Model):
     product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
     name = fields.Char(string="Description")
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit", required=True)
-    product_uom_id = fields.Many2one("uom.uom", string="Unit", required=True)
+    product_uom_id = fields.Many2one(
+        "uom.uom",
+        string="Unit",
+        domain='[("id", "in", allowed_uom_ids)]',
+        required=True,
+    )
+    allowed_uom_ids = fields.Many2many("uom.uom", compute="_compute_allowed_uom_ids")
     consignment_price_unit = fields.Monetary(string="Unit Price", required=True)
     consignment_discount = fields.Float(string="Discount %", default=0.0)
     commission_rate = fields.Float(string="Commission %")
@@ -195,6 +201,11 @@ class ThaConsignmentOrderLine(models.Model):
     def _compute_subtotal(self):
         for line in self:
             line.consignment_subtotal = line.product_uom_qty * line.consignment_price_unit * (1 - (line.consignment_discount or 0.0) / 100.0)
+
+    @api.depends("product_id", "product_id.uom_id", "product_id.uom_ids")
+    def _compute_allowed_uom_ids(self):
+        for line in self:
+            line.allowed_uom_ids = line.product_id.uom_id | line.product_id.uom_ids
 
     @api.onchange("product_id")
     def _onchange_product_id(self):
