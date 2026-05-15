@@ -20,6 +20,7 @@ class ThaConsignmentSettlement(models.Model):
     state = fields.Selection([("draft", "Draft"), ("confirmed", "Confirmed"), ("cancel", "Cancelled")], default="draft", copy=False, required=True)
     line_ids = fields.One2many("tha.consignment.settlement.line", "settlement_id", string="Settlement Lines", copy=True)
     picking_id = fields.Many2one("stock.picking", string="Stock Out", copy=False, readonly=True)
+    picking_state = fields.Selection(related="picking_id.state", string="Stock Out Status")
     invoice_id = fields.Many2one("account.move", string="Customer Invoice", copy=False, readonly=True)
     commission_bill_id = fields.Many2one("account.move", string="Commission Bill", copy=False, readonly=True)
     invoice_count = fields.Integer(compute="_compute_document_counts")

@@ -14,6 +14,10 @@
                 <field name="period_from" optional="show"/>
                 <field name="date_to" optional="show"/>
                 <field name="source_location_id" optional="show"/>
+                <field name="picking_state" widget="badge" optional="hide"
+                       decoration-success="picking_state == 'done'"
+                       decoration-warning="picking_state in ('assigned', 'waiting')"
+                       decoration-danger="picking_state == 'cancel'"/>
                 <field name="amount_total" optional="show"/>
                 <field name="commission_amount" optional="show"/>
                 <field name="net_amount" optional="show"/>
@@ -59,6 +63,7 @@
                             <field name="pricelist_id" readonly="state != 'draft'"/>
                             <field name="currency_id" readonly="state != 'draft'"/>
                             <field name="commission_rate" readonly="state != 'draft'"/>
+                            <field name="picking_state" readonly="1" invisible="not picking_id"/>
                         </group>
                     </group>
                     <notebook>

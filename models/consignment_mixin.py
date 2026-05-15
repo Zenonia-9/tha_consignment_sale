@@ -32,12 +32,25 @@ class ThaConsignmentMixin(models.AbstractModel):
     def _customer_location(self):
         return self.env.ref("stock.stock_location_customers")
 
-    def _next_consignment_sequence(self, code, sequence_xmlid, sequence_date=False):
-        sequence = self.env["ir.sequence"]
-        name = sequence.next_by_code(code, sequence_date=sequence_date)
-        if name:
-            return name
-        return self.env.ref(sequence_xmlid).sudo().next_by_id(sequence_date=sequence_date)
+    def _next_consignment_sequence(self, code, sequence_xmlid, sequence_date=False, company=False):
+        """Return the next sequence for a consignment document, per company.
+
+        We keep the XMLID sequence as a template (company_id=False). For each company,
+        we create (once) a company-specific copy and use that moving forward.
+        """
+        company = company or getattr(self, "company_id", False) or self.env.company
+        Sequence = self.env["ir.sequence"].sudo().with_company(company)
+
+        seq = Sequence.search([("code", "=", code), ("company_id", "=", company.id)], limit=1)
+        if not seq:
+            template = self.env.ref(sequence_xmlid, raise_if_not_found=False)
+            if template:
+                seq = template.copy({
+                    "name": "%s (%s)" % (template.name, company.name),
+                    "company_id": company.id,
+                })
+
+        return seq.next_by_id(sequence_date=sequence_date) if seq else False
 
     def _check_unique_consignment_name(self):
         for record in self:
