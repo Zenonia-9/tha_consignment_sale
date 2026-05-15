@@ -70,8 +70,38 @@ class ThaConsignmentSettlement(models.Model):
         return True
 
     def _assign_sequence(self):
-        if self.name == _("New"):
+        if not self.name or self.name in (_("New"), "New"):
             self.name = self.env["ir.sequence"].next_by_code("tha.consignment.settlement") or _("New")
+
+    @api.model
+    def _fix_missing_sequences(self):
+        for settlement in self.search([("name", "in", [False, "New"]), ("state", "!=", "draft")], order="id"):
+            settlement._assign_sequence()
+        return True
+
+    def action_cancel(self):
+        for settlement in self:
+            if settlement.picking_id.state == "done":
+                raise UserError(_("You cannot cancel %s because its stock out is done.") % settlement.display_name)
+            linked_moves = settlement.invoice_id | settlement.commission_bill_id
+            active_moves = linked_moves.filtered(lambda move: move.state != "cancel")
+            if active_moves:
+                raise UserError(_("Cancel the linked invoice/bill before cancelling %s.") % settlement.display_name)
+            if settlement.picking_id and settlement.picking_id.state != "cancel":
+                settlement.picking_id.action_cancel()
+            settlement.state = "cancel"
+        return True
+
+    def unlink(self):
+        for settlement in self:
+            if settlement.state == "confirmed":
+                raise UserError(_("Cancel %s before deleting it.") % settlement.display_name)
+            if settlement.picking_id and settlement.picking_id.state not in ("cancel",):
+                raise UserError(_("You cannot delete %s while it is linked to an active stock out.") % settlement.display_name)
+            linked_moves = settlement.invoice_id | settlement.commission_bill_id
+            if linked_moves.filtered(lambda move: move.state != "cancel"):
+                raise UserError(_("You cannot delete %s while it is linked to an active invoice or bill.") % settlement.display_name)
+        return super().unlink()
 
     def action_view_stock_out(self):
         self.ensure_one()

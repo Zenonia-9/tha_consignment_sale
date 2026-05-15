@@ -91,15 +91,31 @@ class ThaConsignmentOrder(models.Model):
         return True
 
     def _assign_sequence(self):
-        if self.name == _("New"):
+        if not self.name or self.name in (_("New"), "New"):
             self.name = self.env["ir.sequence"].next_by_code("tha.consignment.order") or _("New")
+
+    @api.model
+    def _fix_missing_sequences(self):
+        for order in self.search([("name", "in", [False, "New"]), ("state", "!=", "draft")], order="id"):
+            order._assign_sequence()
+        return True
 
     def action_cancel(self):
         for order in self:
-            if order.picking_id and order.picking_id.state not in ("done", "cancel"):
+            if order.picking_id.state == "done":
+                raise UserError(_("You cannot cancel %s because its transfer is done.") % order.display_name)
+            if order.picking_id and order.picking_id.state != "cancel":
                 order.picking_id.action_cancel()
             order.state = "cancel"
         return True
+
+    def unlink(self):
+        for order in self:
+            if order.state == "confirmed":
+                raise UserError(_("Cancel %s before deleting it.") % order.display_name)
+            if order.picking_id and order.picking_id.state not in ("cancel",):
+                raise UserError(_("You cannot delete %s while it is linked to an active transfer.") % order.display_name)
+        return super().unlink()
 
     def action_view_transfer(self):
         self.ensure_one()

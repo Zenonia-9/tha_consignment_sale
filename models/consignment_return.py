@@ -48,15 +48,31 @@ class ThaConsignmentReturn(models.Model):
         return True
 
     def _assign_sequence(self):
-        if self.name == _("New"):
+        if not self.name or self.name in (_("New"), "New"):
             self.name = self.env["ir.sequence"].next_by_code("tha.consignment.return") or _("New")
+
+    @api.model
+    def _fix_missing_sequences(self):
+        for consignment_return in self.search([("name", "in", [False, "New"]), ("state", "!=", "draft")], order="id"):
+            consignment_return._assign_sequence()
+        return True
 
     def action_cancel(self):
         for consignment_return in self:
-            if consignment_return.picking_id and consignment_return.picking_id.state not in ("done", "cancel"):
+            if consignment_return.picking_id.state == "done":
+                raise UserError(_("You cannot cancel %s because its transfer is done.") % consignment_return.display_name)
+            if consignment_return.picking_id and consignment_return.picking_id.state != "cancel":
                 consignment_return.picking_id.action_cancel()
             consignment_return.state = "cancel"
         return True
+
+    def unlink(self):
+        for consignment_return in self:
+            if consignment_return.state == "confirmed":
+                raise UserError(_("Cancel %s before deleting it.") % consignment_return.display_name)
+            if consignment_return.picking_id and consignment_return.picking_id.state not in ("cancel",):
+                raise UserError(_("You cannot delete %s while it is linked to an active transfer.") % consignment_return.display_name)
+        return super().unlink()
 
     def action_view_transfer(self):
         self.ensure_one()

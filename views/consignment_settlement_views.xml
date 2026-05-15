@@ -5,11 +5,10 @@
         <field name="model">tha.consignment.settlement</field>
         <field name="arch" type="xml">
             <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
-                <!-- <header>
-                    <button type="action" name="%(action_tha_consignment_settlement)d" string="New" class="btn-primary"/>
+                <header>
                     <button name="action_create_invoice" type="object" string="Create Invoices"/>
                     <button name="action_create_commission_bill" type="object" string="Create Bills"/>
-                </header> -->
+                </header>
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="period_from"/>
@@ -32,6 +31,7 @@
                     <button name="action_confirm" type="object" string="Confirm Settlement" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-secondary" invisible="state != 'confirmed' or invoice_id"/>
                     <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-secondary" invisible="state != 'confirmed' or commission_bill_id or commission_amount == 0"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
@@ -67,7 +67,7 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id"/>
-                                    <field name="available_qty" readonly="1" invisible="state != 'draft'"/>
+                                    <field name="available_qty" readonly="1" invisible="parent.state != 'draft'"/>
                                     <field name="sold_qty"/>
                                     <field name="product_uom_id"/>
                                     <field name="price_unit"/>
@@ -93,6 +93,7 @@
         <field name="name">Consignment Settlements</field>
         <field name="res_model">tha.consignment.settlement</field>
         <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_tha_consignment_settlement_list"/>
     </record>
 
     <record id="view_tha_consignment_sales_report_list" model="ir.ui.view">
@@ -115,6 +116,8 @@
         <field name="name">Consignment Sales</field>
         <field name="res_model">tha.consignment.settlement</field>
         <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_tha_consignment_sales_report_list"/>
         <field name="domain">[("state", "=", "confirmed")]</field>
+        <field name="context">{'create': False, 'delete': False}</field>
     </record>
 </odoo>
