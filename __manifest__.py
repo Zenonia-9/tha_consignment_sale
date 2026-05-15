@@ -3,7 +3,7 @@
     "summary": "Consignment orders, settlement, commission, and return flow",
     "version": "19.0.1.0.0",
     "category": "Inventory/Inventory",
-    "author": "THA",
+    "author": "Thein Htoo Aung",
     "license": "LGPL-3",
     "depends": ["stock", "account", "contacts"],
     "data": [
