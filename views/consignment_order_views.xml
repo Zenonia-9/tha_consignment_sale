@@ -4,7 +4,7 @@
         <field name="name">tha.consignment.order.list</field>
         <field name="model">tha.consignment.order</field>
         <field name="arch" type="xml">
-            <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
+            <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'">
                 <field name="name"/>
                 <field name="date_order"/>
                 <field name="partner_id"/>
@@ -12,7 +12,7 @@
                 <field name="destination_location_id"/>
                 <field name="amount_total"/>
                 <field name="picking_state"/>
-                <field name="state" widget="badge"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
             </list>
         </field>
     </record>
@@ -67,7 +67,6 @@
                                     <field name="name"/>
                                     <field name="product_uom_qty"/>
                                     <field name="product_uom_id"/>
-                                    <field name="lot_id"/>
                                     <field name="consignment_price_unit"/>
                                     <field name="consignment_discount"/>
                                     <field name="commission_rate"/>

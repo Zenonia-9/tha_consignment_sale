@@ -31,19 +31,21 @@
 
     <menuitem id="menu_tha_consignment_stock_by_shop"
               name="Consignment Stock by Shop"
-              parent="stock.menu_warehouse_report"
+              parent="menu_tha_consignment"
               action="action_tha_consignment_stock_by_shop"
-              sequence="241"/>
+              sequence="11"/>
 
     <menuitem id="menu_tha_consignment_sales_report"
               name="Consignment Sales"
-              parent="stock.menu_warehouse_report"
+              parent="menu_tha_consignment"
               action="action_tha_consignment_sales_report"
-              sequence="242"/>
+              sequence="12"/>
 
-    <menuitem id="menu_tha_consignment_commission_report"
-              name="Commission Report"
-              parent="stock.menu_warehouse_report"
-              action="action_tha_consignment_commission_report"
-              sequence="243"/>
+    <record id="menu_tha_consignment_commission_report" model="ir.ui.menu">
+        <field name="name">Commission Report</field>
+        <field name="parent_id" ref="menu_tha_consignment"/>
+        <field name="action" ref="action_tha_consignment_sales_report"/>
+        <field name="sequence">99</field>
+        <field name="active" eval="False"/>
+    </record>
 </odoo>

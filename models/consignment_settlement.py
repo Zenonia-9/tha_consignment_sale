@@ -22,6 +22,8 @@ class ThaConsignmentSettlement(models.Model):
     picking_id = fields.Many2one("stock.picking", string="Stock Out", copy=False, readonly=True)
     invoice_id = fields.Many2one("account.move", string="Customer Invoice", copy=False, readonly=True)
     commission_bill_id = fields.Many2one("account.move", string="Commission Bill", copy=False, readonly=True)
+    invoice_count = fields.Integer(compute="_compute_document_counts")
+    commission_bill_count = fields.Integer(compute="_compute_document_counts")
     amount_total = fields.Monetary(compute="_compute_amounts", store=True)
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
     net_amount = fields.Monetary(compute="_compute_amounts", store=True)
@@ -40,11 +42,13 @@ class ThaConsignmentSettlement(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        seq = self.env["ir.sequence"]
-        for vals in vals_list:
-            if vals.get("name", _("New")) == _("New"):
-                vals["name"] = seq.next_by_code("tha.consignment.settlement") or _("New")
         return super().create(vals_list)
+
+    @api.depends("invoice_id", "commission_bill_id")
+    def _compute_document_counts(self):
+        for settlement in self:
+            settlement.invoice_count = 1 if settlement.invoice_id else 0
+            settlement.commission_bill_count = 1 if settlement.commission_bill_id else 0
 
     @api.onchange("partner_id")
     def _onchange_partner_id(self):
@@ -60,16 +64,14 @@ class ThaConsignmentSettlement(models.Model):
             if settlement.state != "draft":
                 continue
             settlement._check_can_confirm()
-            picking = settlement._create_and_validate_stock_out()
-            invoice = settlement._create_customer_invoice()
-            bill = settlement._create_commission_bill() if settlement.commission_amount else False
-            settlement.write({
-                "picking_id": picking.id,
-                "invoice_id": invoice.id,
-                "commission_bill_id": bill.id if bill else False,
-                "state": "confirmed",
-            })
+            settlement._assign_sequence()
+            picking = settlement._create_stock_out()
+            settlement.write({"picking_id": picking.id, "state": "confirmed"})
         return True
+
+    def _assign_sequence(self):
+        if self.name == _("New"):
+            self.name = self.env["ir.sequence"].next_by_code("tha.consignment.settlement") or _("New")
 
     def action_view_stock_out(self):
         self.ensure_one()
@@ -86,6 +88,22 @@ class ThaConsignmentSettlement(models.Model):
     def _open_record(self, model, res_id, name):
         return {"type": "ir.actions.act_window", "name": name, "res_model": model, "view_mode": "form", "res_id": res_id}
 
+    def action_create_invoice(self):
+        for settlement in self:
+            if settlement.state != "confirmed":
+                raise UserError(_("Confirm the settlement before creating an invoice."))
+            if not settlement.invoice_id:
+                settlement.invoice_id = settlement._create_customer_invoice()
+        return True
+
+    def action_create_commission_bill(self):
+        for settlement in self:
+            if settlement.state != "confirmed":
+                raise UserError(_("Confirm the settlement before creating a bill."))
+            if settlement.commission_amount and not settlement.commission_bill_id:
+                settlement.commission_bill_id = settlement._create_commission_bill()
+        return True
+
     def _check_can_confirm(self):
         self.ensure_one()
         if not self.line_ids:
@@ -95,7 +113,7 @@ class ThaConsignmentSettlement(models.Model):
         for line in self.line_ids:
             line._check_positive_quantity()
 
-    def _create_and_validate_stock_out(self):
+    def _create_stock_out(self):
         self.ensure_one()
         customer_location = self._customer_location()
         picking_type = self._consignment_picking_type(
@@ -120,17 +138,8 @@ class ThaConsignmentSettlement(models.Model):
             "tha_consignment_settlement_id": self.id,
             "move_ids": moves,
         })
-        picking.move_ids._action_confirm(merge=False)
+        picking.action_confirm()
         picking.action_assign()
-        for move in picking.move_ids:
-            line = move.tha_consignment_settlement_line_id
-            if line.lot_id:
-                move.lot_ids = [Command.set(line.lot_id.ids)]
-            move._set_quantity_done(line.sold_qty)
-            move.picked = True
-        result = picking.button_validate()
-        if isinstance(result, dict):
-            raise UserError(_("The stock out needs manual validation: %s") % (result.get("name") or _("stock wizard")))
         return picking
 
     def _create_customer_invoice(self):
@@ -187,7 +196,6 @@ class ThaConsignmentSettlementLine(models.Model):
     currency_id = fields.Many2one(related="settlement_id.currency_id", store=True)
     product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
     product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
-    lot_id = fields.Many2one("stock.lot", string="Lot / Serial")
     available_qty = fields.Float(string="Available Consignment Qty", compute="_compute_available_qty", digits="Product Unit")
     sold_qty = fields.Float(string="Sold Qty", default=1.0, digits="Product Unit", required=True)
     price_unit = fields.Monetary(string="Unit Price", required=True)
@@ -197,11 +205,11 @@ class ThaConsignmentSettlementLine(models.Model):
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
     net_amount = fields.Monetary(compute="_compute_amounts", store=True)
 
-    @api.depends("product_id", "lot_id", "settlement_id.source_location_id")
+    @api.depends("product_id", "settlement_id.source_location_id")
     def _compute_available_qty(self):
         Quant = self.env["stock.quant"]
         for line in self:
-            line.available_qty = Quant._get_available_quantity(line.product_id, line.settlement_id.source_location_id, lot_id=line.lot_id, strict=False) if line.product_id and line.settlement_id.source_location_id else 0.0
+            line.available_qty = Quant._get_available_quantity(line.product_id, line.settlement_id.source_location_id, strict=False) if line.product_id and line.settlement_id.source_location_id else 0.0
 
     @api.depends("sold_qty", "price_unit", "discount", "commission_rate")
     def _compute_amounts(self):

@@ -27,10 +27,6 @@ class ThaConsignmentReturn(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        seq = self.env["ir.sequence"]
-        for vals in vals_list:
-            if vals.get("name", _("New")) == _("New"):
-                vals["name"] = seq.next_by_code("tha.consignment.return") or _("New")
         return super().create(vals_list)
 
     @api.onchange("partner_id")
@@ -46,9 +42,14 @@ class ThaConsignmentReturn(models.Model):
             if consignment_return.state != "draft":
                 continue
             consignment_return._check_can_confirm()
+            consignment_return._assign_sequence()
             picking = consignment_return._create_return_picking()
             consignment_return.write({"picking_id": picking.id, "state": "confirmed"})
         return True
+
+    def _assign_sequence(self):
+        if self.name == _("New"):
+            self.name = self.env["ir.sequence"].next_by_code("tha.consignment.return") or _("New")
 
     def action_cancel(self):
         for consignment_return in self:
@@ -96,9 +97,6 @@ class ThaConsignmentReturn(models.Model):
         })
         picking.move_ids._action_confirm(merge=False)
         picking.action_assign()
-        for move in picking.move_ids:
-            if move.tha_consignment_return_line_id.lot_id:
-                move.lot_ids = [Command.set(move.tha_consignment_return_line_id.lot_id.ids)]
         return picking
 
 
@@ -110,10 +108,17 @@ class ThaConsignmentReturnLine(models.Model):
     sequence = fields.Integer(default=10)
     return_id = fields.Many2one("tha.consignment.return", required=True, ondelete="cascade")
     company_id = fields.Many2one(related="return_id.company_id", store=True)
-    product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
+    available_product_ids = fields.Many2many("product.product", compute="_compute_available_product_ids")
+    product_id = fields.Many2one("product.product", string="Product", domain=[("id", "in", available_product_ids)], required=True)
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit", required=True)
     product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
-    lot_id = fields.Many2one("stock.lot", string="Lot / Serial")
+
+    @api.depends("return_id.source_location_id")
+    def _compute_available_product_ids(self):
+        Quant = self.env["stock.quant"]
+        for line in self:
+            quants = Quant.search([("location_id", "child_of", line.return_id.source_location_id.id), ("quantity", ">", 0)]) if line.return_id.source_location_id else Quant
+            line.available_product_ids = quants.mapped("product_id")
 
     @api.onchange("product_id")
     def _onchange_product_id(self):

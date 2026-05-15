@@ -56,10 +56,6 @@ class ThaConsignmentOrder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        seq = self.env["ir.sequence"]
-        for vals in vals_list:
-            if vals.get("name", _("New")) == _("New"):
-                vals["name"] = seq.next_by_code("tha.consignment.order") or _("New")
         return super().create(vals_list)
 
     @api.onchange("company_id")
@@ -89,9 +85,14 @@ class ThaConsignmentOrder(models.Model):
             if order.state != "draft":
                 continue
             order._check_can_confirm()
+            order._assign_sequence()
             picking = order._create_issue_picking()
             order.write({"picking_id": picking.id, "state": "confirmed"})
         return True
+
+    def _assign_sequence(self):
+        if self.name == _("New"):
+            self.name = self.env["ir.sequence"].next_by_code("tha.consignment.order") or _("New")
 
     def action_cancel(self):
         for order in self:
@@ -151,9 +152,6 @@ class ThaConsignmentOrder(models.Model):
         })
         picking.move_ids._action_confirm(merge=False)
         picking.action_assign()
-        for move in picking.move_ids:
-            if move.tha_consignment_order_line_id.lot_id:
-                move.lot_ids = [Command.set(move.tha_consignment_order_line_id.lot_id.ids)]
         return picking
 
 
@@ -170,7 +168,6 @@ class ThaConsignmentOrderLine(models.Model):
     name = fields.Char(string="Description")
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit", required=True)
     product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
-    lot_id = fields.Many2one("stock.lot", string="Lot / Serial")
     consignment_price_unit = fields.Monetary(string="Unit Price", required=True)
     consignment_discount = fields.Float(string="Discount %", default=0.0)
     commission_rate = fields.Float(string="Commission %")
