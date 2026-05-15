@@ -129,7 +129,7 @@ class ThaConsignmentReturnLine(models.Model):
     available_product_ids = fields.Many2many("product.product", compute="_compute_available_product_ids")
     product_id = fields.Many2one("product.product", string="Product", domain=[("id", "in", available_product_ids)], required=True)
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit", required=True)
-    product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
+    product_uom_id = fields.Many2one("uom.uom", string="Unit", required=True)
 
     @api.depends("return_id.source_location_id")
     def _compute_available_product_ids(self):

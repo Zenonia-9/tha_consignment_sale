@@ -11,13 +11,13 @@
                 </header>
                 <field name="name"/>
                 <field name="partner_id"/>
-                <field name="period_from"/>
-                <field name="date_to"/>
-                <field name="source_location_id"/>
-                <field name="amount_total"/>
-                <field name="commission_amount"/>
-                <field name="net_amount"/>
-                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
+                <field name="period_from" optional="show"/>
+                <field name="date_to" optional="show"/>
+                <field name="source_location_id" optional="show"/>
+                <field name="amount_total" optional="show"/>
+                <field name="commission_amount" optional="show"/>
+                <field name="net_amount" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>
     </record>
@@ -67,14 +67,15 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id"/>
-                                    <field name="available_qty" readonly="1" invisible="parent.state != 'draft'"/>
+                                    <field name="available_qty" readonly="1" column_invisible="parent.state != 'draft'" optional="show"/>
                                     <field name="sold_qty"/>
                                     <field name="product_uom_id"/>
                                     <field name="price_unit"/>
-                                    <field name="discount"/>
-                                    <field name="subtotal" readonly="1"/>
-                                    <field name="commission_amount" readonly="1"/>
-                                    <field name="net_amount" readonly="1"/>
+                                    <field name="discount" optional="hide"/>
+                                    <field name="commission_rate" optional="show"/>
+                                    <field name="subtotal" readonly="1" optional="show"/>
+                                    <field name="commission_amount" readonly="1" optional="hide"/>
+                                    <field name="net_amount" readonly="1" optional="hide"/>
                                 </list>
                             </field>
                             <group class="oe_subtotal_footer" colspan="2">
@@ -89,35 +90,42 @@
         </field>
     </record>
 
+    <record id="view_tha_consignment_settlement_search" model="ir.ui.view">
+        <field name="name">tha.consignment.settlement.search</field>
+        <field name="model">tha.consignment.settlement</field>
+        <field name="arch" type="xml">
+            <search string="Consignment Settlements">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="source_location_id"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter name="has_invoice" string="Has Invoice" domain="[('invoice_id', '!=', False)]"/>
+                <filter name="no_invoice" string="To Invoice" domain="[('state', '=', 'confirmed'), ('invoice_id', '=', False)]"/>
+                <filter name="has_bill" string="Has Bill" domain="[('commission_bill_id', '!=', False)]"/>
+                <filter name="no_bill" string="To Bill" domain="[('state', '=', 'confirmed'), ('commission_amount', '>', 0), ('commission_bill_id', '=', False)]"/>
+                <separator/>
+                <filter name="period_from" string="Period From" date="period_from"/>
+                <filter name="date_to" string="Period To" date="date_to"/>
+                <group>
+                    <filter name="group_shop" string="Shop" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_source_location" string="Source Location" context="{'group_by': 'source_location_id'}"/>
+                    <filter name="group_period_from" string="Period From" context="{'group_by': 'period_from'}"/>
+                    <filter name="group_period_to" string="Period To" context="{'group_by': 'date_to'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_tha_consignment_settlement" model="ir.actions.act_window">
         <field name="name">Consignment Settlements</field>
         <field name="res_model">tha.consignment.settlement</field>
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_tha_consignment_settlement_list"/>
+        <field name="search_view_id" ref="view_tha_consignment_settlement_search"/>
     </record>
 
-    <record id="view_tha_consignment_sales_report_list" model="ir.ui.view">
-        <field name="name">tha.consignment.sales.report.list</field>
-        <field name="model">tha.consignment.settlement</field>
-        <field name="arch" type="xml">
-            <list create="false" delete="false">
-                <field name="name"/>
-                <field name="partner_id"/>
-                <field name="date_to"/>
-                <field name="amount_total"/>
-                <field name="commission_amount"/>
-                <field name="net_amount"/>
-                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="action_tha_consignment_sales_report" model="ir.actions.act_window">
-        <field name="name">Consignment Sales</field>
-        <field name="res_model">tha.consignment.settlement</field>
-        <field name="view_mode">list,form</field>
-        <field name="view_id" ref="view_tha_consignment_sales_report_list"/>
-        <field name="domain">[("state", "=", "confirmed")]</field>
-        <field name="context">{'create': False, 'delete': False}</field>
-    </record>
 </odoo>

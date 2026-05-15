@@ -227,7 +227,7 @@ class ThaConsignmentSettlementLine(models.Model):
     company_id = fields.Many2one(related="settlement_id.company_id", store=True)
     currency_id = fields.Many2one(related="settlement_id.currency_id", store=True)
     product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
-    product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
+    product_uom_id = fields.Many2one("uom.uom", string="Unit", required=True)
     available_qty = fields.Float(string="Available Consignment Qty", compute="_compute_available_qty", digits="Product Unit")
     sold_qty = fields.Float(string="Sold Qty", default=1.0, digits="Product Unit", required=True)
     price_unit = fields.Monetary(string="Unit Price", required=True)
@@ -249,6 +249,11 @@ class ThaConsignmentSettlementLine(models.Model):
             line.subtotal = line.sold_qty * line.price_unit * (1 - (line.discount or 0.0) / 100.0)
             line.commission_amount = line.subtotal * line.commission_rate / 100.0
             line.net_amount = line.subtotal - line.commission_amount
+
+    @api.onchange("settlement_id")
+    def _onchange_settlement_id_commission_rate(self):
+        for line in self:
+            line.commission_rate = line.settlement_id.commission_rate
 
     @api.onchange("product_id")
     def _onchange_product_id(self):

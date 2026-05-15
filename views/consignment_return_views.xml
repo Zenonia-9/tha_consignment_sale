@@ -11,7 +11,7 @@
                 <field name="source_location_id"/>
                 <field name="destination_location_id"/>
                 <field name="picking_state" widget="badge" decoration-success="picking_state == 'done'" decoration-warning="picking_state == 'waiting'"/>
-                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>
     </record>
@@ -59,9 +59,39 @@
         </field>
     </record>
 
+    <record id="view_tha_consignment_return_search" model="ir.ui.view">
+        <field name="name">tha.consignment.return.search</field>
+        <field name="model">tha.consignment.return</field>
+        <field name="arch" type="xml">
+            <search string="Consignment Returns">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="source_location_id"/>
+                <field name="destination_location_id"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter name="transfer_done" string="Transfer Done" domain="[('picking_state', '=', 'done')]"/>
+                <filter name="transfer_pending" string="Transfer Pending" domain="[('picking_state', 'not in', ['done', 'cancel'])]"/>
+                <separator/>
+                <filter name="date_return" string="Return Date" date="date_return"/>
+                <group>
+                    <filter name="group_shop" string="Shop" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_transfer_status" string="Transfer Status" context="{'group_by': 'picking_state'}"/>
+                    <filter name="group_source_location" string="Source Location" context="{'group_by': 'source_location_id'}"/>
+                    <filter name="group_destination_location" string="Destination Location" context="{'group_by': 'destination_location_id'}"/>
+                    <filter name="group_date" string="Return Date" context="{'group_by': 'date_return'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_tha_consignment_return" model="ir.actions.act_window">
         <field name="name">Consignment Returns</field>
         <field name="res_model">tha.consignment.return</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_tha_consignment_return_search"/>
     </record>
 </odoo>

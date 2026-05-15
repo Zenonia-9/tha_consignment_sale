@@ -185,7 +185,7 @@ class ThaConsignmentOrderLine(models.Model):
     product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
     name = fields.Char(string="Description")
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit", required=True)
-    product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
+    product_uom_id = fields.Many2one("uom.uom", string="Unit", required=True)
     consignment_price_unit = fields.Monetary(string="Unit Price", required=True)
     consignment_discount = fields.Float(string="Discount %", default=0.0)
     commission_rate = fields.Float(string="Commission %")

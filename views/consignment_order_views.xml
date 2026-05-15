@@ -8,11 +8,11 @@
                 <field name="name"/>
                 <field name="date_order"/>
                 <field name="partner_id"/>
-                <field name="source_location_id"/>
-                <field name="destination_location_id"/>
+                <field name="source_location_id" optional="show"/>
+                <field name="destination_location_id" optional="show"/>
                 <field name="amount_total"/>
-                <field name="picking_state" widget="badge" decoration-success="picking_state == 'done'" decoration-warning="picking_state == 'waiting'"/>
-                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
+                <field name="picking_state" widget="badge" decoration-success="picking_state == 'done'" decoration-warning="picking_state == 'waiting'" decoration-info="picking_state == 'ready'"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>
     </record>
@@ -68,8 +68,8 @@
                                     <field name="product_uom_qty"/>
                                     <field name="product_uom_id"/>
                                     <field name="consignment_price_unit"/>
-                                    <field name="consignment_discount"/>
-                                    <field name="commission_rate"/>
+                                    <field name="consignment_discount" optional="hide"/>
+                                    <field name="commission_rate" optional="show"/>
                                     <field name="consignment_subtotal" readonly="1"/>
                                 </list>
                             </field>
@@ -85,9 +85,39 @@
         </field>
     </record>
 
+    <record id="view_tha_consignment_order_search" model="ir.ui.view">
+        <field name="name">tha.consignment.order.search</field>
+        <field name="model">tha.consignment.order</field>
+        <field name="arch" type="xml">
+            <search string="Consignment Orders">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="source_location_id"/>
+                <field name="destination_location_id"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter name="transfer_done" string="Transfer Done" domain="[('picking_state', '=', 'done')]"/>
+                <filter name="transfer_pending" string="Transfer Pending" domain="[('picking_state', 'not in', ['done', 'cancel'])]"/>
+                <separator/>
+                <filter name="date_order" string="Order Date" date="date_order"/>
+                <group>
+                    <filter name="group_shop" string="Shop" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_transfer_status" string="Transfer Status" context="{'group_by': 'picking_state'}"/>
+                    <filter name="group_source_location" string="Source Location" context="{'group_by': 'source_location_id'}"/>
+                    <filter name="group_destination_location" string="Destination Location" context="{'group_by': 'destination_location_id'}"/>
+                    <filter name="group_date" string="Order Date" context="{'group_by': 'date_order'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_tha_consignment_order" model="ir.actions.act_window">
         <field name="name">Consignment Orders</field>
         <field name="res_model">tha.consignment.order</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_tha_consignment_order_search"/>
     </record>
 </odoo>
