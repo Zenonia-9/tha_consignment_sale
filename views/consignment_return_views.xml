@@ -52,10 +52,15 @@
                     <field name="line_ids" readonly="state != 'draft'">
                         <list editable="bottom">
                             <field name="sequence" widget="handle"/>
-                            <field name="available_product_ids" invisible="1"/>
+                            <field name="available_product_ids" column_invisible="1"/>
+                            <field name="allowed_uom_ids" column_invisible="1"/>
+                            <field name="available_qty" column_invisible="1"/>
                             <field name="product_id"/>
+                            <field name="availability_state" widget="badge" readonly="1" optional="show"
+                                decoration-success="availability_state == 'available'"
+                                decoration-danger="availability_state == 'not_available'"/>
                             <field name="product_uom_qty"/>
-                            <field name="product_uom_id"/>
+                            <field name="product_uom_id" widget="many2one_uom"/>
                         </list>
                     </field>
                 </sheet>

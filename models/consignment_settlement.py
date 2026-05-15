@@ -1,5 +1,6 @@
 from odoo import Command, api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools.float_utils import float_compare
 
 
 class ThaConsignmentSettlement(models.Model):
@@ -145,6 +146,7 @@ class ThaConsignmentSettlement(models.Model):
             raise UserError(_("Settlement source must be an internal consignment location."))
         for line in self.line_ids:
             line._check_positive_quantity()
+            line._check_available_quantity()
 
     def _create_stock_out(self):
         self.ensure_one()
@@ -228,8 +230,19 @@ class ThaConsignmentSettlementLine(models.Model):
     company_id = fields.Many2one(related="settlement_id.company_id", store=True)
     currency_id = fields.Many2one(related="settlement_id.currency_id", store=True)
     product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
-    product_uom_id = fields.Many2one("uom.uom", string="Unit", required=True)
+    product_uom_id = fields.Many2one(
+        "uom.uom",
+        string="Unit",
+        domain='[("id", "in", allowed_uom_ids)]',
+        required=True,
+    )
+    allowed_uom_ids = fields.Many2many("uom.uom", compute="_compute_allowed_uom_ids")
     available_qty = fields.Float(string="Available Consignment Qty", compute="_compute_available_qty", digits="Product Unit")
+    availability_state = fields.Selection(
+        [("available", "Available"), ("not_available", "Not Available")],
+        compute="_compute_availability_state",
+        string="Availability",
+    )
     sold_qty = fields.Float(string="Sold Qty", default=1.0, digits="Product Unit", required=True)
     price_unit = fields.Monetary(string="Unit Price", required=True)
     discount = fields.Float(string="Discount %", default=0.0)
@@ -243,6 +256,16 @@ class ThaConsignmentSettlementLine(models.Model):
         Quant = self.env["stock.quant"]
         for line in self:
             line.available_qty = Quant._get_available_quantity(line.product_id, line.settlement_id.source_location_id, strict=False) if line.product_id and line.settlement_id.source_location_id else 0.0
+
+    @api.depends("product_id", "product_id.uom_id", "product_id.uom_ids")
+    def _compute_allowed_uom_ids(self):
+        for line in self:
+            line.allowed_uom_ids = line.product_id.uom_id | line.product_id.uom_ids
+
+    @api.depends("available_qty", "sold_qty", "product_id", "product_uom_id")
+    def _compute_availability_state(self):
+        for line in self:
+            line.availability_state = "available" if line._has_available_quantity() else "not_available"
 
     @api.depends("sold_qty", "price_unit", "discount", "commission_rate")
     def _compute_amounts(self):
@@ -284,6 +307,32 @@ class ThaConsignmentSettlementLine(models.Model):
     def _check_positive_quantity(self):
         if self.sold_qty <= 0:
             raise ValidationError(_("Sold quantity must be greater than zero."))
+
+    def _requested_qty_in_product_uom(self):
+        self.ensure_one()
+        if not self.product_id:
+            return 0.0
+        if self.product_uom_id:
+            return self.product_uom_id._compute_quantity(self.sold_qty, self.product_id.uom_id)
+        return self.sold_qty
+
+    def _has_available_quantity(self):
+        self.ensure_one()
+        if not self.product_id or not self.settlement_id.source_location_id:
+            return False
+        return float_compare(
+            self.available_qty,
+            self._requested_qty_in_product_uom(),
+            precision_rounding=self.product_id.uom_id.rounding,
+        ) >= 0
+
+    def _check_available_quantity(self):
+        self.ensure_one()
+        if not self._has_available_quantity():
+            raise UserError(
+                _("Not enough consignment stock for %s in %s.")
+                % (self.product_id.display_name, self.settlement_id.source_location_id.display_name)
+            )
 
     def _prepare_stock_move_vals(self, customer_location):
         self.ensure_one()

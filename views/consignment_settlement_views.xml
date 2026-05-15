@@ -72,9 +72,13 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id"/>
-                                    <field name="available_qty" readonly="1" column_invisible="parent.state != 'draft'" optional="show"/>
+                                    <field name="allowed_uom_ids" column_invisible="1"/>
+                                    <field name="available_qty" column_invisible="1"/>
+                                    <field name="availability_state" widget="badge" readonly="1" optional="show"
+                                        decoration-success="availability_state == 'available'"
+                                        decoration-danger="availability_state == 'not_available'"/>
                                     <field name="sold_qty"/>
-                                    <field name="product_uom_id"/>
+                                    <field name="product_uom_id" widget="many2one_uom"/>
                                     <field name="price_unit"/>
                                     <field name="discount" optional="hide"/>
                                     <field name="commission_rate" optional="show"/>
