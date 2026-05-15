@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tha_consignment_order_user,tha.consignment.order user,model_tha_consignment_order,stock.group_stock_user,1,1,1,1
+access_tha_consignment_order_line_user,tha.consignment.order.line user,model_tha_consignment_order_line,stock.group_stock_user,1,1,1,1
+access_tha_consignment_settlement_user,tha.consignment.settlement user,model_tha_consignment_settlement,stock.group_stock_user,1,1,1,1
+access_tha_consignment_settlement_line_user,tha.consignment.settlement.line user,model_tha_consignment_settlement_line,stock.group_stock_user,1,1,1,1
+access_tha_consignment_return_user,tha.consignment.return user,model_tha_consignment_return,stock.group_stock_user,1,1,1,1
+access_tha_consignment_return_line_user,tha.consignment.return.line user,model_tha_consignment_return_line,stock.group_stock_user,1,1,1,1

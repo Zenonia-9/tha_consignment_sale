@@ -1,0 +1,21 @@
+{
+    "name": "THA Consignment Sale",
+    "summary": "Consignment orders, settlement, commission, and return flow",
+    "version": "19.0.1.0.0",
+    "category": "Inventory/Inventory",
+    "author": "THA",
+    "license": "LGPL-3",
+    "depends": ["stock", "account", "contacts"],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/consignment_data.xml",
+        "views/res_partner_views.xml",
+        "views/consignment_order_views.xml",
+        "views/consignment_settlement_views.xml",
+        "views/consignment_return_views.xml",
+        "views/stock_picking_views.xml",
+        "views/menu_views.xml",
+    ],
+    "installable": True,
+    "application": False,
+}

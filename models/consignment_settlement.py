@@ -1,0 +1,245 @@
+from odoo import Command, api, fields, models, _
+from odoo.exceptions import UserError, ValidationError
+
+
+class ThaConsignmentSettlement(models.Model):
+    _name = "tha.consignment.settlement"
+    _inherit = "tha.consignment.mixin"
+    _description = "Consignment Settlement"
+    _order = "date_to desc, id desc"
+
+    name = fields.Char(default=lambda self: _("New"), copy=False, readonly=True, index=True)
+    partner_id = fields.Many2one("res.partner", string="Shop", domain=[("is_consignment_shop", "=", True)], required=True)
+    company_id = fields.Many2one("res.company", default=lambda self: self._default_consignment_company(), required=True)
+    period_from = fields.Date(required=True)
+    date_to = fields.Date(string="Period To", default=fields.Date.context_today, required=True)
+    source_location_id = fields.Many2one("stock.location", string="Source Location", domain=[("usage", "=", "internal")], required=True)
+    pricelist_id = fields.Many2one("product.pricelist", string="Pricelist")
+    currency_id = fields.Many2one("res.currency", compute="_compute_currency_id", store=True, readonly=False, required=True)
+    commission_rate = fields.Float(string="Commission %", default=0.0)
+    state = fields.Selection([("draft", "Draft"), ("confirmed", "Confirmed"), ("cancel", "Cancelled")], default="draft", copy=False, required=True)
+    line_ids = fields.One2many("tha.consignment.settlement.line", "settlement_id", string="Settlement Lines", copy=True)
+    picking_id = fields.Many2one("stock.picking", string="Stock Out", copy=False, readonly=True)
+    invoice_id = fields.Many2one("account.move", string="Customer Invoice", copy=False, readonly=True)
+    commission_bill_id = fields.Many2one("account.move", string="Commission Bill", copy=False, readonly=True)
+    amount_total = fields.Monetary(compute="_compute_amounts", store=True)
+    commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
+    net_amount = fields.Monetary(compute="_compute_amounts", store=True)
+
+    @api.depends("pricelist_id", "company_id")
+    def _compute_currency_id(self):
+        for settlement in self:
+            settlement.currency_id = settlement.pricelist_id.currency_id or settlement.company_id.currency_id
+
+    @api.depends("line_ids.subtotal", "line_ids.commission_amount", "line_ids.net_amount")
+    def _compute_amounts(self):
+        for settlement in self:
+            settlement.amount_total = sum(settlement.line_ids.mapped("subtotal"))
+            settlement.commission_amount = sum(settlement.line_ids.mapped("commission_amount"))
+            settlement.net_amount = sum(settlement.line_ids.mapped("net_amount"))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        seq = self.env["ir.sequence"]
+        for vals in vals_list:
+            if vals.get("name", _("New")) == _("New"):
+                vals["name"] = seq.next_by_code("tha.consignment.settlement") or _("New")
+        return super().create(vals_list)
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        self.source_location_id = self.partner_id.consignment_location_id
+        self.pricelist_id = self.partner_id.consignment_pricelist_id
+        self.commission_rate = self.partner_id.commission_rate
+        for line in self.line_ids:
+            line.commission_rate = self.commission_rate
+            line._onchange_price_inputs()
+
+    def action_confirm(self):
+        for settlement in self:
+            if settlement.state != "draft":
+                continue
+            settlement._check_can_confirm()
+            picking = settlement._create_and_validate_stock_out()
+            invoice = settlement._create_customer_invoice()
+            bill = settlement._create_commission_bill() if settlement.commission_amount else False
+            settlement.write({
+                "picking_id": picking.id,
+                "invoice_id": invoice.id,
+                "commission_bill_id": bill.id if bill else False,
+                "state": "confirmed",
+            })
+        return True
+
+    def action_view_stock_out(self):
+        self.ensure_one()
+        return self._open_record("stock.picking", self.picking_id.id, _("Consignment Stock Out"))
+
+    def action_view_invoice(self):
+        self.ensure_one()
+        return self._open_record("account.move", self.invoice_id.id, _("Customer Invoice"))
+
+    def action_view_commission_bill(self):
+        self.ensure_one()
+        return self._open_record("account.move", self.commission_bill_id.id, _("Commission Bill"))
+
+    def _open_record(self, model, res_id, name):
+        return {"type": "ir.actions.act_window", "name": name, "res_model": model, "view_mode": "form", "res_id": res_id}
+
+    def _check_can_confirm(self):
+        self.ensure_one()
+        if not self.line_ids:
+            raise UserError(_("Add at least one sold product line."))
+        if self.source_location_id.usage != "internal":
+            raise UserError(_("Settlement source must be an internal consignment location."))
+        for line in self.line_ids:
+            line._check_positive_quantity()
+
+    def _create_and_validate_stock_out(self):
+        self.ensure_one()
+        picking_type = self.env.ref("tha_consignment_sale.picking_type_consignment_sold")
+        customer_location = self._customer_location()
+        moves = [Command.create(line._prepare_stock_move_vals(customer_location)) for line in self.line_ids]
+        picking = self.env["stock.picking"].with_company(self.company_id).create({
+            "picking_type_id": picking_type.id,
+            "partner_id": self.partner_id.id,
+            "origin": self.name,
+            "location_id": self.source_location_id.id,
+            "location_dest_id": customer_location.id,
+            "company_id": self.company_id.id,
+            "tha_is_consignment_transfer": True,
+            "tha_consignment_settlement_id": self.id,
+            "move_ids": moves,
+        })
+        picking.move_ids._action_confirm(merge=False)
+        picking.action_assign()
+        for move in picking.move_ids:
+            line = move.tha_consignment_settlement_line_id
+            if line.lot_id:
+                move.lot_ids = [Command.set(line.lot_id.ids)]
+            move._set_quantity_done(line.sold_qty)
+            move.picked = True
+        result = picking.button_validate()
+        if isinstance(result, dict):
+            raise UserError(_("The stock out needs manual validation: %s") % (result.get("name") or _("stock wizard")))
+        return picking
+
+    def _create_customer_invoice(self):
+        self.ensure_one()
+        invoice_lines = []
+        for line in self.line_ids:
+            invoice_lines.append(Command.create({
+                "product_id": line.product_id.id,
+                "name": line.product_id.display_name,
+                "quantity": line.sold_qty,
+                "product_uom_id": line.product_uom_id.id,
+                "price_unit": line.price_unit,
+                "discount": line.discount,
+                "tax_ids": [Command.clear()],
+            }))
+        return self.env["account.move"].with_company(self.company_id).create({
+            "move_type": "out_invoice",
+            "partner_id": self.partner_id.id,
+            "invoice_date": self.date_to,
+            "invoice_origin": self.name,
+            "company_id": self.company_id.id,
+            "currency_id": self.currency_id.id,
+            "invoice_line_ids": invoice_lines,
+        })
+
+    def _create_commission_bill(self):
+        self.ensure_one()
+        product = self.env.ref("tha_consignment_sale.product_consignment_commission")
+        return self.env["account.move"].with_company(self.company_id).create({
+            "move_type": "in_invoice",
+            "partner_id": self.partner_id.id,
+            "invoice_date": self.date_to,
+            "invoice_origin": self.name,
+            "company_id": self.company_id.id,
+            "currency_id": self.currency_id.id,
+            "invoice_line_ids": [Command.create({
+                "product_id": product.product_variant_id.id,
+                "name": _("Consignment commission for %s") % self.name,
+                "quantity": 1.0,
+                "price_unit": self.commission_amount,
+                "tax_ids": [Command.clear()],
+            })],
+        })
+
+
+class ThaConsignmentSettlementLine(models.Model):
+    _name = "tha.consignment.settlement.line"
+    _description = "Consignment Settlement Line"
+    _order = "settlement_id, sequence, id"
+
+    sequence = fields.Integer(default=10)
+    settlement_id = fields.Many2one("tha.consignment.settlement", required=True, ondelete="cascade")
+    company_id = fields.Many2one(related="settlement_id.company_id", store=True)
+    currency_id = fields.Many2one(related="settlement_id.currency_id", store=True)
+    product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
+    product_uom_id = fields.Many2one("uom.uom", string="UoM", required=True)
+    lot_id = fields.Many2one("stock.lot", string="Lot / Serial")
+    available_qty = fields.Float(string="Available Consignment Qty", compute="_compute_available_qty", digits="Product Unit")
+    sold_qty = fields.Float(string="Sold Qty", default=1.0, digits="Product Unit", required=True)
+    price_unit = fields.Monetary(string="Unit Price", required=True)
+    discount = fields.Float(string="Discount %", default=0.0)
+    commission_rate = fields.Float(string="Commission %")
+    subtotal = fields.Monetary(compute="_compute_amounts", store=True)
+    commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
+    net_amount = fields.Monetary(compute="_compute_amounts", store=True)
+
+    @api.depends("product_id", "lot_id", "settlement_id.source_location_id")
+    def _compute_available_qty(self):
+        Quant = self.env["stock.quant"]
+        for line in self:
+            line.available_qty = Quant._get_available_quantity(line.product_id, line.settlement_id.source_location_id, lot_id=line.lot_id, strict=False) if line.product_id and line.settlement_id.source_location_id else 0.0
+
+    @api.depends("sold_qty", "price_unit", "discount", "commission_rate")
+    def _compute_amounts(self):
+        for line in self:
+            line.subtotal = line.sold_qty * line.price_unit * (1 - (line.discount or 0.0) / 100.0)
+            line.commission_amount = line.subtotal * line.commission_rate / 100.0
+            line.net_amount = line.subtotal - line.commission_amount
+
+    @api.onchange("product_id")
+    def _onchange_product_id(self):
+        self.product_uom_id = self.product_id.uom_id
+        self.commission_rate = self.settlement_id.commission_rate
+        self._onchange_price_inputs()
+
+    @api.onchange("sold_qty", "product_uom_id", "settlement_id.pricelist_id")
+    def _onchange_price_inputs(self):
+        self.price_unit = self.settlement_id._price_from_pricelist(
+            self.settlement_id.pricelist_id,
+            self.product_id,
+            self.sold_qty,
+            self.product_uom_id,
+            self.settlement_id.date_to,
+        )
+
+    @api.constrains("sold_qty", "discount", "commission_rate")
+    def _check_values(self):
+        for line in self:
+            line._check_positive_quantity()
+            if not 0 <= line.discount <= 100:
+                raise ValidationError(_("Discount must be between 0 and 100."))
+            if line.commission_rate < 0:
+                raise ValidationError(_("Commission cannot be negative."))
+
+    def _check_positive_quantity(self):
+        if self.sold_qty <= 0:
+            raise ValidationError(_("Sold quantity must be greater than zero."))
+
+    def _prepare_stock_move_vals(self, customer_location):
+        self.ensure_one()
+        return {
+            "name": self.product_id.display_name,
+            "product_id": self.product_id.id,
+            "product_uom_qty": self.sold_qty,
+            "product_uom": self.product_uom_id.id,
+            "location_id": self.settlement_id.source_location_id.id,
+            "location_dest_id": customer_location.id,
+            "company_id": self.settlement_id.company_id.id,
+            "origin": self.settlement_id.name,
+            "tha_consignment_settlement_line_id": self.id,
+        }

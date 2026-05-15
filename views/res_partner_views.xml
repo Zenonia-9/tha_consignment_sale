@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_consignment" model="ir.ui.view">
+        <field name="name">res.partner.form.consignment</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Consignment" name="tha_consignment">
+                    <group>
+                        <field name="is_consignment_shop"/>
+                        <field name="consignment_location_id" invisible="not is_consignment_shop" required="is_consignment_shop"/>
+                        <field name="consignment_pricelist_id" invisible="not is_consignment_shop"/>
+                        <field name="commission_rate" invisible="not is_consignment_shop"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
