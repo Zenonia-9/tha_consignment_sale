@@ -229,7 +229,13 @@ class ThaConsignmentSettlementLine(models.Model):
     settlement_id = fields.Many2one("tha.consignment.settlement", required=True, ondelete="cascade")
     company_id = fields.Many2one(related="settlement_id.company_id", store=True)
     currency_id = fields.Many2one(related="settlement_id.currency_id", store=True)
-    product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
+    available_product_ids = fields.Many2many("product.product", compute="_compute_available_product_ids")
+    product_id = fields.Many2one(
+        "product.product",
+        string="Product",
+        domain='[("id", "in", available_product_ids)]',
+        required=True,
+    )
     product_uom_id = fields.Many2one(
         "uom.uom",
         string="Unit",
@@ -250,6 +256,13 @@ class ThaConsignmentSettlementLine(models.Model):
     subtotal = fields.Monetary(compute="_compute_amounts", store=True)
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
     net_amount = fields.Monetary(compute="_compute_amounts", store=True)
+    
+    @api.depends("settlement_id.source_location_id")
+    def _compute_available_product_ids(self):
+        Quant = self.env["stock.quant"]
+        for line in self:
+            quants = Quant.search([("location_id", "child_of", line.settlement_id.source_location_id.id), ("quantity", ">", 0)]) if line.settlement_id.source_location_id else Quant
+            line.available_product_ids = quants.mapped("product_id")
 
     @api.depends("product_id", "settlement_id.source_location_id")
     def _compute_available_qty(self):
