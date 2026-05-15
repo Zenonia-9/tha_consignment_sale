@@ -10,6 +10,7 @@
         "security/ir.model.access.csv",
         "data/consignment_data.xml",
         "views/res_partner_views.xml",
+        "views/stock_warehouse_views.xml",
         "views/consignment_order_views.xml",
         "views/consignment_settlement_views.xml",
         "views/consignment_return_views.xml",

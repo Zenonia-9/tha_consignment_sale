@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_warehouse_form_consignment" model="ir.ui.view">
+        <field name="name">stock.warehouse.form.consignment</field>
+        <field name="model">stock.warehouse</field>
+        <field name="inherit_id" ref="stock.view_warehouse"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="tha_is_consignment_source_warehouse"/>
+                <field name="tha_is_consignment_warehouse"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_warehouse_list_consignment" model="ir.ui.view">
+        <field name="name">stock.warehouse.list.consignment</field>
+        <field name="model">stock.warehouse</field>
+        <field name="inherit_id" ref="stock.view_warehouse_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="tha_is_consignment_source_warehouse" optional="hide"/>
+                <field name="tha_is_consignment_warehouse" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

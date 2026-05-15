@@ -6,30 +6,20 @@ class ThaConsignmentMixin(models.AbstractModel):
     _description = "Consignment Helper Mixin"
 
     def _default_consignment_company(self):
-        warehouse = self.env["stock.warehouse"].search([("code", "=", "YGN")], limit=1)
-        return warehouse.company_id or self.env.company
+        return self.env.company
 
-    def _find_warehouse(self, code=False, name=False, company=False):
-        Warehouse = self.env["stock.warehouse"]
-        domain = [("company_id", "=", (company or self.env.company).id)]
-        warehouse = Warehouse
-        if code:
-            warehouse = Warehouse.search(domain + [("code", "=", code)], limit=1)
-        if not warehouse and name:
-            warehouse = Warehouse.search(domain + [("name", "ilike", name)], limit=1)
-        if not warehouse and code:
-            warehouse = Warehouse.search([("code", "=", code)], limit=1)
-        if not warehouse and name:
-            warehouse = Warehouse.search([("name", "ilike", name)], limit=1)
-        return warehouse
+    def _find_flagged_warehouse(self, flag_field, company=False):
+        company = company or self.env.company
+        return self.env["stock.warehouse"].search([
+            ("company_id", "=", company.id),
+            (flag_field, "=", True),
+        ], limit=1)
 
     def _default_source_warehouse(self):
-        company = self._default_consignment_company()
-        return self._find_warehouse("YGN", "YGN Warehouse", company)
+        return self._find_flagged_warehouse("tha_is_consignment_source_warehouse", self._default_consignment_company())
 
     def _default_destination_warehouse(self):
-        company = self._default_consignment_company()
-        return self._find_warehouse("CSWH", "Consignment Warehouse", company)
+        return self._find_flagged_warehouse("tha_is_consignment_warehouse", self._default_consignment_company())
 
     def _warehouse_for_location(self, location, company=False):
         if not location:
@@ -40,6 +30,29 @@ class ThaConsignmentMixin(models.AbstractModel):
 
     def _customer_location(self):
         return self.env.ref("stock.stock_location_customers")
+
+    def _consignment_picking_type(self, flow, name, code, sequence_code, sequence_xmlid, source_location, destination_location, company=False):
+        company = company or self.env.company
+        PickingType = self.env["stock.picking.type"].sudo().with_company(company)
+        picking_type = PickingType.search([
+            ("company_id", "=", company.id),
+            ("tha_consignment_flow", "=", flow),
+            ("active", "=", True),
+        ], limit=1)
+        if picking_type:
+            return picking_type
+        return PickingType.create({
+            "name": name,
+            "code": code,
+            "sequence_code": sequence_code,
+            "sequence_id": self.env.ref(sequence_xmlid).id,
+            "default_location_src_id": source_location.id,
+            "default_location_dest_id": destination_location.id,
+            "use_create_lots": False,
+            "use_existing_lots": True,
+            "company_id": company.id,
+            "tha_consignment_flow": flow,
+        })
 
     def _price_from_pricelist(self, pricelist, product, quantity, uom=False, date=False):
         if not product:

@@ -12,9 +12,19 @@ class ThaConsignmentOrder(models.Model):
     date_order = fields.Date(string="Date", default=fields.Date.context_today, required=True)
     partner_id = fields.Many2one("res.partner", string="Shop", domain=[("is_consignment_shop", "=", True)], required=True)
     company_id = fields.Many2one("res.company", default=lambda self: self._default_consignment_company(), required=True)
-    source_warehouse_id = fields.Many2one("stock.warehouse", default=lambda self: self._default_source_warehouse(), check_company=True)
+    source_warehouse_id = fields.Many2one(
+        "stock.warehouse",
+        default=lambda self: self._default_source_warehouse(),
+        check_company=True,
+        domain=[("tha_is_consignment_source_warehouse", "=", True)],
+    )
     source_location_id = fields.Many2one("stock.location", default=lambda self: self._default_source_warehouse().lot_stock_id, required=True)
-    destination_warehouse_id = fields.Many2one("stock.warehouse", default=lambda self: self._default_destination_warehouse(), check_company=True)
+    destination_warehouse_id = fields.Many2one(
+        "stock.warehouse",
+        default=lambda self: self._default_destination_warehouse(),
+        check_company=True,
+        domain=[("tha_is_consignment_warehouse", "=", True)],
+    )
     destination_location_id = fields.Many2one("stock.location", string="Destination Location", domain=[("usage", "=", "internal")], required=True)
     pricelist_id = fields.Many2one("product.pricelist", string="Pricelist")
     currency_id = fields.Many2one("res.currency", compute="_compute_currency_id", store=True, readonly=False, required=True)
@@ -54,8 +64,8 @@ class ThaConsignmentOrder(models.Model):
 
     @api.onchange("company_id")
     def _onchange_company_id(self):
-        source_wh = self._find_warehouse("YGN", "YGN Warehouse", self.company_id)
-        dest_wh = self._find_warehouse("CSWH", "Consignment Warehouse", self.company_id)
+        source_wh = self._find_flagged_warehouse("tha_is_consignment_source_warehouse", self.company_id)
+        dest_wh = self._find_flagged_warehouse("tha_is_consignment_warehouse", self.company_id)
         self.source_warehouse_id = source_wh
         self.source_location_id = source_wh.lot_stock_id
         self.destination_warehouse_id = dest_wh
@@ -115,7 +125,16 @@ class ThaConsignmentOrder(models.Model):
 
     def _create_issue_picking(self):
         self.ensure_one()
-        picking_type = self.env.ref("tha_consignment_sale.picking_type_consignment_issue")
+        picking_type = self._consignment_picking_type(
+            "issue",
+            _("Consignment Issue"),
+            "internal",
+            "CONISS",
+            "tha_consignment_sale.seq_picking_consignment_issue",
+            self.source_location_id,
+            self.destination_location_id,
+            self.company_id,
+        )
         move_commands = []
         for line in self.line_ids:
             move_commands.append(Command.create(line._prepare_stock_move_vals()))
@@ -169,7 +188,7 @@ class ThaConsignmentOrderLine(models.Model):
         self.commission_rate = self.order_id.commission_rate
         self._onchange_price_inputs()
 
-    @api.onchange("product_uom_qty", "product_uom_id", "order_id.pricelist_id")
+    @api.onchange("product_uom_qty", "product_uom_id")
     def _onchange_price_inputs(self):
         self.consignment_price_unit = self.order_id._price_from_pricelist(
             self.order_id.pricelist_id,
@@ -195,7 +214,7 @@ class ThaConsignmentOrderLine(models.Model):
     def _prepare_stock_move_vals(self):
         self.ensure_one()
         return {
-            "name": self.name or self.product_id.display_name,
+            "description_picking": self.name or self.product_id.display_name,
             "product_id": self.product_id.id,
             "product_uom_qty": self.product_uom_qty,
             "product_uom": self.product_uom_id.id,

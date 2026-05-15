@@ -10,6 +10,21 @@ class StockPicking(models.Model):
     tha_consignment_return_id = fields.Many2one("tha.consignment.return", string="Consignment Return", copy=False)
 
 
+class StockPickingType(models.Model):
+    _inherit = "stock.picking.type"
+
+    tha_consignment_flow = fields.Selection(
+        [
+            ("issue", "Consignment Issue"),
+            ("sold", "Consignment Sold"),
+            ("return", "Consignment Return"),
+        ],
+        string="Consignment Flow",
+        copy=False,
+        index=True,
+    )
+
+
 class StockMove(models.Model):
     _inherit = "stock.move"
 

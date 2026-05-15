@@ -26,18 +26,21 @@
             <field name="name">Consignment Issue Transfer</field>
             <field name="prefix">CON/ISS/</field>
             <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
         </record>
 
         <record id="seq_picking_consignment_sold" model="ir.sequence">
             <field name="name">Consignment Sold Transfer</field>
             <field name="prefix">CON/SOLD/</field>
             <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
         </record>
 
         <record id="seq_picking_consignment_return" model="ir.sequence">
             <field name="name">Consignment Return Transfer</field>
             <field name="prefix">CON/RET/</field>
             <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
         </record>
 
         <record id="picking_type_consignment_issue" model="stock.picking.type">
@@ -49,6 +52,7 @@
             <field name="default_location_dest_id" ref="stock.stock_location_stock"/>
             <field name="use_create_lots">False</field>
             <field name="use_existing_lots">True</field>
+            <field name="active" eval="False"/>
         </record>
 
         <record id="picking_type_consignment_sold" model="stock.picking.type">
@@ -60,6 +64,7 @@
             <field name="default_location_dest_id" ref="stock.stock_location_customers"/>
             <field name="use_create_lots">False</field>
             <field name="use_existing_lots">True</field>
+            <field name="active" eval="False"/>
         </record>
 
         <record id="picking_type_consignment_return" model="stock.picking.type">
@@ -71,6 +76,7 @@
             <field name="default_location_dest_id" ref="stock.stock_location_stock"/>
             <field name="use_create_lots">False</field>
             <field name="use_existing_lots">True</field>
+            <field name="active" eval="False"/>
         </record>
 
         <record id="product_consignment_commission" model="product.template">
@@ -82,4 +88,7 @@
             <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
         </record>
     </data>
+
+    <function model="ir.sequence" name="write" eval="([ref('seq_picking_consignment_issue'), ref('seq_picking_consignment_sold'), ref('seq_picking_consignment_return')], {'company_id': False})"/>
+    <function model="stock.picking.type" name="write" eval="([ref('picking_type_consignment_issue'), ref('picking_type_consignment_sold'), ref('picking_type_consignment_return')], {'active': False})"/>
 </odoo>

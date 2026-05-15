@@ -97,8 +97,17 @@ class ThaConsignmentSettlement(models.Model):
 
     def _create_and_validate_stock_out(self):
         self.ensure_one()
-        picking_type = self.env.ref("tha_consignment_sale.picking_type_consignment_sold")
         customer_location = self._customer_location()
+        picking_type = self._consignment_picking_type(
+            "sold",
+            _("Consignment Sold"),
+            "outgoing",
+            "CONSOLD",
+            "tha_consignment_sale.seq_picking_consignment_sold",
+            self.source_location_id,
+            customer_location,
+            self.company_id,
+        )
         moves = [Command.create(line._prepare_stock_move_vals(customer_location)) for line in self.line_ids]
         picking = self.env["stock.picking"].with_company(self.company_id).create({
             "picking_type_id": picking_type.id,
@@ -207,7 +216,7 @@ class ThaConsignmentSettlementLine(models.Model):
         self.commission_rate = self.settlement_id.commission_rate
         self._onchange_price_inputs()
 
-    @api.onchange("sold_qty", "product_uom_id", "settlement_id.pricelist_id")
+    @api.onchange("sold_qty", "product_uom_id")
     def _onchange_price_inputs(self):
         self.price_unit = self.settlement_id._price_from_pricelist(
             self.settlement_id.pricelist_id,
@@ -233,7 +242,7 @@ class ThaConsignmentSettlementLine(models.Model):
     def _prepare_stock_move_vals(self, customer_location):
         self.ensure_one()
         return {
-            "name": self.product_id.display_name,
+            "description_picking": self.product_id.display_name,
             "product_id": self.product_id.id,
             "product_uom_qty": self.sold_qty,
             "product_uom": self.product_uom_id.id,

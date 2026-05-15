@@ -1,28 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <menuitem id="menu_tha_consignment"
+              name="Consignment"
+              parent="stock.menu_stock_warehouse_mgmt"
+              sequence="2"/>
+
     <menuitem id="menu_tha_consignment_order"
               name="Consignment Orders"
-              parent="stock.menu_stock_warehouse_mgmt"
+              parent="menu_tha_consignment"
               action="action_tha_consignment_order"
-              sequence="61"/>
+              sequence="1"/>
 
     <menuitem id="menu_tha_consignment_transfer"
               name="Consignment Transfers"
-              parent="stock.menu_stock_warehouse_mgmt"
+              parent="menu_tha_consignment"
               action="action_tha_consignment_transfer"
-              sequence="62"/>
+              sequence="2"/>
 
     <menuitem id="menu_tha_consignment_settlement"
               name="Consignment Settlements"
-              parent="stock.menu_stock_warehouse_mgmt"
+              parent="menu_tha_consignment"
               action="action_tha_consignment_settlement"
-              sequence="63"/>
+              sequence="3"/>
 
     <menuitem id="menu_tha_consignment_return"
               name="Consignment Returns"
-              parent="stock.menu_stock_warehouse_mgmt"
+              parent="menu_tha_consignment"
               action="action_tha_consignment_return"
-              sequence="64"/>
+              sequence="4"/>
 
     <menuitem id="menu_tha_consignment_stock_by_shop"
               name="Consignment Stock by Shop"

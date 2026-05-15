@@ -13,7 +13,12 @@ class ThaConsignmentReturn(models.Model):
     partner_id = fields.Many2one("res.partner", string="Shop", domain=[("is_consignment_shop", "=", True)], required=True)
     company_id = fields.Many2one("res.company", default=lambda self: self._default_consignment_company(), required=True)
     source_location_id = fields.Many2one("stock.location", string="Source Location", domain=[("usage", "=", "internal")], required=True)
-    destination_warehouse_id = fields.Many2one("stock.warehouse", default=lambda self: self._default_source_warehouse(), check_company=True)
+    destination_warehouse_id = fields.Many2one(
+        "stock.warehouse",
+        default=lambda self: self._default_source_warehouse(),
+        check_company=True,
+        domain=[("tha_is_consignment_source_warehouse", "=", True)],
+    )
     destination_location_id = fields.Many2one("stock.location", string="Destination Location", required=True, default=lambda self: self._default_source_warehouse().lot_stock_id)
     state = fields.Selection([("draft", "Draft"), ("confirmed", "Confirmed"), ("cancel", "Cancelled")], default="draft", copy=False, required=True)
     line_ids = fields.One2many("tha.consignment.return.line", "return_id", string="Return Lines", copy=True)
@@ -67,7 +72,16 @@ class ThaConsignmentReturn(models.Model):
 
     def _create_return_picking(self):
         self.ensure_one()
-        picking_type = self.env.ref("tha_consignment_sale.picking_type_consignment_return")
+        picking_type = self._consignment_picking_type(
+            "return",
+            _("Consignment Return"),
+            "internal",
+            "CONRET",
+            "tha_consignment_sale.seq_picking_consignment_return",
+            self.source_location_id,
+            self.destination_location_id,
+            self.company_id,
+        )
         moves = [Command.create(line._prepare_stock_move_vals()) for line in self.line_ids]
         picking = self.env["stock.picking"].with_company(self.company_id).create({
             "picking_type_id": picking_type.id,
@@ -117,7 +131,7 @@ class ThaConsignmentReturnLine(models.Model):
     def _prepare_stock_move_vals(self):
         self.ensure_one()
         return {
-            "name": self.product_id.display_name,
+            "description_picking": self.product_id.display_name,
             "product_id": self.product_id.id,
             "product_uom_qty": self.product_uom_qty,
             "product_uom": self.product_uom_id.id,
