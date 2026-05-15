@@ -4,13 +4,13 @@
         <field name="name">tha.consignment.return.list</field>
         <field name="model">tha.consignment.return</field>
         <field name="arch" type="xml">
-            <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'">
+            <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
                 <field name="name"/>
                 <field name="date_return"/>
                 <field name="partner_id"/>
                 <field name="source_location_id"/>
                 <field name="destination_location_id"/>
-                <field name="picking_state"/>
+                <field name="picking_state" widget="badge" decoration-success="picking_state == 'done'" decoration-warning="picking_state == 'waiting'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
             </list>
         </field>

@@ -4,11 +4,12 @@
         <field name="name">tha.consignment.settlement.list</field>
         <field name="model">tha.consignment.settlement</field>
         <field name="arch" type="xml">
-            <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'">
-                <header>
+            <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
+                <!-- <header>
+                    <button type="action" name="%(action_tha_consignment_settlement)d" string="New" class="btn-primary"/>
                     <button name="action_create_invoice" type="object" string="Create Invoices"/>
                     <button name="action_create_commission_bill" type="object" string="Create Bills"/>
-                </header>
+                </header> -->
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="period_from"/>
@@ -66,13 +67,12 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id"/>
-                                    <field name="available_qty" readonly="1"/>
+                                    <field name="available_qty" readonly="1" invisible="state != 'draft'"/>
                                     <field name="sold_qty"/>
                                     <field name="product_uom_id"/>
                                     <field name="price_unit"/>
                                     <field name="discount"/>
                                     <field name="subtotal" readonly="1"/>
-                                    <field name="commission_rate"/>
                                     <field name="commission_amount" readonly="1"/>
                                     <field name="net_amount" readonly="1"/>
                                 </list>
@@ -99,14 +99,14 @@
         <field name="name">tha.consignment.sales.report.list</field>
         <field name="model">tha.consignment.settlement</field>
         <field name="arch" type="xml">
-            <list create="false" decoration-success="state == 'confirmed'">
+            <list create="false" delete="false">
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="date_to"/>
                 <field name="amount_total"/>
                 <field name="commission_amount"/>
                 <field name="net_amount"/>
-                <field name="state" widget="badge" decoration-success="state == 'confirmed'"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'"/>
             </list>
         </field>
     </record>
