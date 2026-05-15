@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="false">
         <record id="seq_consignment_order" model="ir.sequence">
             <field name="name">Consignment Order</field>
             <field name="code">tha.consignment.order</field>

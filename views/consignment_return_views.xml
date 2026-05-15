@@ -10,7 +10,11 @@
                 <field name="partner_id"/>
                 <field name="source_location_id"/>
                 <field name="destination_location_id"/>
-                <field name="picking_state" widget="badge" decoration-success="picking_state == 'done'" decoration-warning="picking_state == 'waiting'"/>
+                <field name="picking_state" widget="badge"
+                    decoration-info="picking_state == 'assigned'"
+                    decoration-success="picking_state == 'done'"
+                    decoration-warning="picking_state in ('waiting', 'confirmed')"
+                    decoration-danger="picking_state == 'cancel'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>

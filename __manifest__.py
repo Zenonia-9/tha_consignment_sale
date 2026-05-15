@@ -8,6 +8,7 @@
     "depends": ["stock", "account", "contacts"],
     "data": [
         "security/ir.model.access.csv",
+        "security/consignment_security.xml",
         "data/consignment_data.xml",
         "views/res_partner_views.xml",
         "views/stock_warehouse_views.xml",
