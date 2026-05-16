@@ -6,7 +6,7 @@ class ThaConsignmentOrder(models.Model):
     _name = "tha.consignment.order"
     _inherit = "tha.consignment.mixin"
     _description = "Consignment Order"
-    _order = "date_order desc, id desc"
+    _order = "create_date desc, id desc"
 
     name = fields.Char(default=lambda self: _("New"), copy=False, readonly=True, index=True)
     date_order = fields.Date(string="Date", default=fields.Date.context_today, required=True)

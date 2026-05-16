@@ -7,7 +7,7 @@ class ThaConsignmentSettlement(models.Model):
     _name = "tha.consignment.settlement"
     _inherit = "tha.consignment.mixin"
     _description = "Consignment Settlement"
-    _order = "date_to desc, id desc"
+    _order = "create_date desc, id desc"
 
     name = fields.Char(default=lambda self: _("New"), copy=False, readonly=True, index=True)
     partner_id = fields.Many2one("res.partner", string="Shop", domain=[("is_consignment_shop", "=", True)], required=True)

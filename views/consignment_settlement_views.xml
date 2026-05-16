@@ -74,7 +74,7 @@
                                     <field name="product_id"/>
                                     <field name="allowed_uom_ids" column_invisible="1"/>
                                     <field name="available_qty" column_invisible="1"/>
-                                    <field name="availability_state" widget="badge" readonly="1" optional="show"
+                                    <field name="availability_state" widget="badge" readonly="1" optional="show" column_invisible="parent.state != 'draft'"
                                         decoration-success="availability_state == 'available'"
                                         decoration-danger="availability_state == 'not_available'"/>
                                     <field name="sold_qty"/>
