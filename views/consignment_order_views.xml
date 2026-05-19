@@ -124,5 +124,13 @@
         <field name="res_model">tha.consignment.order</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_tha_consignment_order_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a consignment order
+            </p>
+            <p>
+                Consignment orders are used to transfer stock to shops and track transfer status.
+            </p>
+        </field>
     </record>
 </odoo>
