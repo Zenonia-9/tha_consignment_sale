@@ -133,18 +133,25 @@ class ThaConsignmentOrder(models.Model):
         orders = self.exists()
         if not orders:
             raise UserError(_("No consignment orders selected."))
-        if any(order.state == "cancel" for order in orders):
-            raise UserError(_("Cancelled consignment orders cannot be printed."))
+
+        if any(order.state != "confirmed" for order in orders):
+            raise UserError(_("Only confirmed consignment orders can be printed."))
+
         if any(not order.line_ids for order in orders):
             raise UserError(_("Each selected consignment order must have at least one product line."))
-
-        partner = orders[0].partner_id
-        if not partner or any(order.partner_id != partner for order in orders):
-            raise UserError(_("Selected consignment orders must have the same shop."))
 
         company = orders[0].company_id
         if any(order.company_id != company for order in orders):
             raise UserError(_("Selected consignment orders must belong to the same company."))
+
+        if any(not order.currency_id for order in orders):
+            raise UserError(_("Each selected consignment order must have a currency."))
+
+        if any(line.product_uom_qty <= 0 for order in orders for line in order.line_ids):
+            raise UserError(_("Product quantities must be greater than zero before printing."))
+
+        if any(line.consignment_price_unit < 0 for order in orders for line in order.line_ids):
+            raise UserError(_("Unit price cannot be negative before printing."))
 
         return orders
 

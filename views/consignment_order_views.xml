@@ -30,8 +30,8 @@
         <field name="arch" type="xml">
             <form string="Consignment Order">
                 <header>
-                    <button name="action_open_print_wizard" type="object" string="Print" invisible="state == 'cancel'"/>
                     <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_open_print_wizard" type="object" string="Print" invisible="state == 'cancel'"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
