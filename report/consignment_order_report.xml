@@ -78,7 +78,7 @@
                                     </div>
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Commission %</div>
-                                        <div class="col-7">: <span t-esc="'%.2f%%' % (o.commission_rate or 0.0)"/></div>
+                                        <div class="col-7">: <span t-esc="'%.2f' % (o.commission_rate or 0.0)"/>%</div>
                                     </div>
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Source</div>
@@ -192,7 +192,7 @@
                                     </div>
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Commission %</div>
-                                        <div class="col-7">: <span t-esc="'%.2f%%' % (o.commission_rate or 0.0)"/></div>
+                                        <div class="col-7">: <span t-esc="'%.2f' % (o.commission_rate or 0.0)"/>%</div>
                                     </div>
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Destination</div>
