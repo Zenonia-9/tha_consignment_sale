@@ -60,7 +60,11 @@ class ThaConsignmentOrder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        return super().create(vals_list)
+        orders = super().create(vals_list)
+        for order in orders:
+            if not order.name or order.name in (_("New"), "New"):
+                order._assign_sequence()
+        return orders
 
     @api.onchange("company_id")
     def _onchange_company_id(self):

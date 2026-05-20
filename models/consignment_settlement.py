@@ -48,7 +48,11 @@ class ThaConsignmentSettlement(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        return super().create(vals_list)
+        settlements = super().create(vals_list)
+        for settlement in settlements:
+            if not settlement.name or settlement.name in (_("New"), "New"):
+                settlement._assign_sequence()
+        return settlements
 
     @api.depends("invoice_id", "commission_bill_id")
     def _compute_document_counts(self):

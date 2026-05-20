@@ -32,7 +32,11 @@ class ThaConsignmentReturn(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        return super().create(vals_list)
+        returns = super().create(vals_list)
+        for consignment_return in returns:
+            if not consignment_return.name or consignment_return.name in (_("New"), "New"):
+                consignment_return._assign_sequence()
+        return returns
 
     @api.onchange("partner_id")
     def _onchange_partner_id(self):
