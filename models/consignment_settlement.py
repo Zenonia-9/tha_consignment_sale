@@ -256,7 +256,7 @@ class ThaConsignmentSettlementLine(models.Model):
     sold_qty = fields.Float(string="Sold Qty", default=1.0, digits="Product Unit", required=True)
     price_unit = fields.Monetary(string="Unit Price", required=True)
     discount = fields.Float(string="Discount %", default=0.0)
-    commission_rate = fields.Float(string="Commission %")
+    commission_rate = fields.Float(string="Commission %", related='settlement_id.commission_rate', readonly=True)
     subtotal = fields.Monetary(compute="_compute_amounts", store=True)
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
     net_amount = fields.Monetary(compute="_compute_amounts", store=True)
@@ -299,7 +299,6 @@ class ThaConsignmentSettlementLine(models.Model):
     @api.onchange("product_id")
     def _onchange_product_id(self):
         self.product_uom_id = self.product_id.uom_id
-        self.commission_rate = self.settlement_id.commission_rate
         self._onchange_price_inputs()
 
     @api.onchange("sold_qty", "product_uom_id")

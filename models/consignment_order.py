@@ -238,7 +238,7 @@ class ThaConsignmentOrderLine(models.Model):
     allowed_uom_ids = fields.Many2many("uom.uom", compute="_compute_allowed_uom_ids")
     consignment_price_unit = fields.Monetary(string="Unit Price", required=True)
     consignment_discount = fields.Float(string="Discount %", default=0.0)
-    commission_rate = fields.Float(string="Commission %")
+    commission_rate = fields.Float(string="Commission %", related='order_id.commission_rate', readonly=True)
     consignment_subtotal = fields.Monetary(string="Subtotal", compute="_compute_subtotal", store=True)
 
     @api.depends("product_uom_qty", "consignment_price_unit", "consignment_discount")
@@ -255,7 +255,6 @@ class ThaConsignmentOrderLine(models.Model):
     def _onchange_product_id(self):
         self.name = self.product_id.display_name
         self.product_uom_id = self.product_id.uom_id
-        self.commission_rate = self.order_id.commission_rate
         self._onchange_price_inputs()
 
     @api.onchange("product_uom_qty", "product_uom_id")

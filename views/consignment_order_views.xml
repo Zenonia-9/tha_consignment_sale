@@ -78,7 +78,7 @@
                                     <field name="product_uom_id" widget="many2one_uom"/>
                                     <field name="consignment_price_unit"/>
                                     <field name="consignment_discount" optional="hide"/>
-                                    <!-- <field name="commission_rate" optional="show"/> -->
+                                    <field name="commission_rate" column_invisible="1"/>
                                     <field name="consignment_subtotal" readonly="1"/>
                                 </list>
                             </field>
