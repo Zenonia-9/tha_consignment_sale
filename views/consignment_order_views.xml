@@ -5,6 +5,9 @@
         <field name="model">tha.consignment.order</field>
         <field name="arch" type="xml">
             <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
+                <header>
+                    <button name="action_open_print_wizard" type="object" string="Print"/>
+                </header>
                 <field name="name"/>
                 <field name="date_order"/>
                 <field name="partner_id"/>
@@ -27,6 +30,7 @@
         <field name="arch" type="xml">
             <form string="Consignment Order">
                 <header>
+                    <button name="action_open_print_wizard" type="object" string="Print" invisible="state == 'cancel'"/>
                     <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>

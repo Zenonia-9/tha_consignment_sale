@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_consignment_order_print_wizard_form" model="ir.ui.view">
+        <field name="name">tha.consignment.order.print.wizard.form</field>
+        <field name="model">tha.consignment.order.print.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Print Consignment Order">
+                <group>
+                    <group>
+                        <field name="shop_name"/>
+                        <field name="order_count"/>
+                    </group>
+                    <group>
+                        <field name="paper_size" widget="radio" options="{'horizontal': True}"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_print"
+                            string="Print"
+                            type="object"
+                            class="oe_highlight"
+                            data-hotkey="q"/>
+                    <button string="Cancel"
+                            special="cancel"
+                            class="btn-secondary"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

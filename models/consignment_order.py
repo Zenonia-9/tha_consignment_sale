@@ -129,6 +129,39 @@ class ThaConsignmentOrder(models.Model):
             "res_id": self.picking_id.id,
         }
 
+    def _validate_print_selection(self):
+        orders = self.exists()
+        if not orders:
+            raise UserError(_("No consignment orders selected."))
+        if any(order.state == "cancel" for order in orders):
+            raise UserError(_("Cancelled consignment orders cannot be printed."))
+        if any(not order.line_ids for order in orders):
+            raise UserError(_("Each selected consignment order must have at least one product line."))
+
+        partner = orders[0].partner_id
+        if not partner or any(order.partner_id != partner for order in orders):
+            raise UserError(_("Selected consignment orders must have the same shop."))
+
+        company = orders[0].company_id
+        if any(order.company_id != company for order in orders):
+            raise UserError(_("Selected consignment orders must belong to the same company."))
+
+        return orders
+
+    def action_open_print_wizard(self):
+        orders = self._validate_print_selection()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Print Consignment Order"),
+            "res_model": "tha.consignment.order.print.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "active_ids": orders.ids,
+                "active_model": "tha.consignment.order",
+            },
+        }
+
     def _check_can_confirm(self):
         self.ensure_one()
         if not self.line_ids:
