@@ -32,30 +32,55 @@
                             .consignment-order-page {
                                 font-size: 13px;
                             }
+
                             .consignment-order-page .info-label {
                                 font-weight: 600;
                                 white-space: nowrap;
                             }
+
                             .consignment-order-page .line-table {
                                 width: 100%;
                                 table-layout: fixed;
-                                border-collapse: collapse;
+                                border-collapse: separate;
+                                border-spacing: 0;
                             }
+
                             .consignment-order-page .line-table th,
                             .consignment-order-page .line-table td {
                                 border: 1px solid #222;
                                 padding: 4px 5px;
-                                vertical-align: top;
-                                overflow-wrap: anywhere;
+                                vertical-align: middle;
                             }
+
+                            .consignment-order-page .line-table th {
+                                text-align: center;
+                                font-weight: 600;
+                            }
+
+                            .consignment-order-page .line-table .no-cell {
+                                width: 8mm;
+                                text-align: center;
+                                vertical-align: middle;
+                                white-space: nowrap;
+                            }
+
+                            .consignment-order-page .line-table .text-cell {
+                                vertical-align: top;
+                                word-break: normal;
+                                overflow-wrap: break-word;
+                            }
+
                             .consignment-order-page .amount-cell {
+                                padding-right: 5px !important;
                                 white-space: nowrap;
                             }
                         </style>
+
                         <div class="consignment-order-page">
                             <div class="text-center mb-3">
                                 <h3 style="margin-bottom: 0;">Consignment Order</h3>
                             </div>
+
                             <div class="row mb-3">
                                 <div class="col-6">
                                     <div class="row mb-1">
@@ -68,9 +93,13 @@
                                     </div>
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Order Date</div>
-                                        <div class="col-7">: <span t-field="o.date_order" t-options="{&quot;widget&quot;: &quot;date&quot;, &quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/></div>
+                                        <div class="col-7">:
+                                            <span t-field="o.date_order"
+                                                t-options="{&quot;widget&quot;: &quot;date&quot;, &quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/>
+                                        </div>
                                     </div>
                                 </div>
+
                                 <div class="col-6">
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Currency</div>
@@ -90,45 +119,117 @@
                             <table class="line-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 7%;">No</th>
-                                        <th style="width: 17%;">Product</th>
-                                        <th style="width: 22%;">Description</th>
-                                        <th style="width: 10%;" class="text-end">Qty</th>
-                                        <th style="width: 10%;">UoM</th>
-                                        <th style="width: 12%;" class="text-end">Unit Price</th>
-                                        <th style="width: 8%;" class="text-end">Disc %</th>
-                                        <th style="width: 8%;" class="text-end">Comm %</th>
-                                        <th style="width: 14%;" class="text-end">Subtotal</th>
+                                        <th class="no-cell">No</th>
+                                        <th style="width: 20%;">Product</th>
+                                        <th style="width: 24%;">Description</th>
+                                        <th style="width: 9%;" class="text-end">Qty</th>
+                                        <th style="width: 9%;">UoM</th>
+                                        <th style="width: 14%;" class="text-end">Unit Price</th>
+                                        <th style="width: 7%;" class="text-end">Disc %</th>
+                                        <!-- <th style="width: 8%;" class="text-end">Comm %</th> -->
+                                        <th style="width: 16%; padding-right: 5px;" class="text-end">Subtotal</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
                                     <tr t-foreach="o.line_ids" t-as="line">
-                                        <td><span t-esc="line_index + 1"/></td>
-                                        <td><span t-field="line.product_id.display_name"/></td>
-                                        <td><span t-field="line.name"/></td>
-                                        <td class="text-end"><span t-field="line.product_uom_qty"/></td>
-                                        <td><span t-field="line.product_uom_id.name"/></td>
-                                        <td class="text-end amount-cell"><span t-field="line.consignment_price_unit" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></td>
-                                        <td class="text-end"><span t-esc="'%.2f' % (line.consignment_discount or 0.0)"/></td>
-                                        <td class="text-end"><span t-esc="'%.2f' % (line.commission_rate or 0.0)"/></td>
-                                        <td class="text-end amount-cell"><span t-field="line.consignment_subtotal" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></td>
+                                        <td class="no-cell">
+                                            <span t-esc="line_index + 1"/>
+                                        </td>
+                                        <td class="text-cell">
+                                            <span t-field="line.product_id.display_name"/>
+                                        </td>
+                                        <td class="text-cell">
+                                            <span t-field="line.name"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-field="line.product_uom_qty"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.product_uom_id.name"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-field="line.consignment_price_unit"
+                                                t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-esc="'%.2f' % (line.consignment_discount or 0.0)"/>
+                                        </td>
+                                        <!-- <td class="text-end amount-cell">
+                                            <span t-esc="'%.2f' % (line.commission_rate or 0.0)"/>
+                                        </td> -->
+                                        <td class="text-end amount-cell">
+                                            <span t-field="line.consignment_subtotal"
+                                                t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                        </td>
                                     </tr>
                                 </tbody>
+
                                 <tfoot>
                                     <tr>
-                                        <td colspan="8" class="text-end"><strong>Total Amount</strong></td>
-                                        <td class="text-end amount-cell"><strong><span t-field="o.amount_total" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></strong></td>
+                                        <td colspan="5" style="border: none; !important"></td>
+                                        <td colspan="2" class="text-end">
+                                            <strong>Total Amount</strong>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <strong>
+                                                <span t-field="o.amount_total"
+                                                    t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                            </strong>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="8" class="text-end"><strong>Commission Amount</strong></td>
-                                        <td class="text-end amount-cell"><strong><span t-field="o.commission_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></strong></td>
+                                        <td colspan="5" style="border: none; !important"></td>
+                                        <td colspan="2" class="text-end">
+                                            <strong>Commission Amount</strong>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <strong>
+                                                <span t-field="o.commission_amount"
+                                                    t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                            </strong>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="8" class="text-end"><strong>Net Amount</strong></td>
-                                        <td class="text-end amount-cell"><strong><span t-field="o.net_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></strong></td>
+                                        <td colspan="5" style="border: none; !important"></td>
+                                        <td colspan="2" class="text-end">
+                                            <strong>Net Amount</strong>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <strong>
+                                                <span t-field="o.net_amount"
+                                                    t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                            </strong>
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
+
+                            <!-- SIGNATURE -->
+                            <div class="mt-4" style="page-break-inside: avoid;">
+
+                                <div class="row text-center">
+                                    <div class="col-4"><strong>Approved By</strong></div>
+                                    <div class="col-4"><strong>Received By</strong></div>
+                                    <div class="col-4"><strong>Paid By</strong></div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <t t-foreach="[1,2,3]" t-as="x">
+                                        <div class="col-4 px-3">
+                                            <div style="border-bottom: 1px dotted black; height: 12px;"/>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <t t-foreach="[1,2,3]" t-as="x">
+                                        <div class="col-4 px-3">
+                                            <div style="border-bottom: 1px dotted black; height: 12px;"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </t>
@@ -144,32 +245,57 @@
                     <div class="page">
                         <style>
                             .consignment-order-page {
-                                font-size: 11px;
+                                font-size: 12px;
                             }
+
                             .consignment-order-page .info-label {
                                 font-weight: 600;
                                 white-space: nowrap;
                             }
+
                             .consignment-order-page .line-table {
                                 width: 100%;
                                 table-layout: fixed;
-                                border-collapse: collapse;
+                                border-collapse: separate;
+                                border-spacing: 0;
                             }
+
                             .consignment-order-page .line-table th,
                             .consignment-order-page .line-table td {
                                 border: 1px solid #222;
-                                padding: 2px 3px;
-                                vertical-align: top;
-                                overflow-wrap: anywhere;
+                                padding: 2px 4px;
+                                vertical-align: middle;
                             }
+
+                            .consignment-order-page .line-table th {
+                                text-align: center;
+                                font-weight: 600;
+                            }
+
+                            .consignment-order-page .line-table .no-cell {
+                                width: 7mm;
+                                text-align: center;
+                                vertical-align: middle;
+                                white-space: nowrap;
+                            }
+
+                            .consignment-order-page .line-table .text-cell {
+                                vertical-align: top;
+                                word-break: normal;
+                                overflow-wrap: break-word;
+                            }
+
                             .consignment-order-page .amount-cell {
+                                padding-right: 4px !important;
                                 white-space: nowrap;
                             }
                         </style>
+
                         <div class="consignment-order-page">
                             <div class="text-center mb-2">
                                 <h4 style="margin-bottom: 0;">Consignment Order</h4>
                             </div>
+
                             <div class="row mb-2">
                                 <div class="col-6">
                                     <div class="row mb-1">
@@ -182,9 +308,13 @@
                                     </div>
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Order Date</div>
-                                        <div class="col-7">: <span t-field="o.date_order" t-options="{&quot;widget&quot;: &quot;date&quot;, &quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/></div>
+                                        <div class="col-7">:
+                                            <span t-field="o.date_order"
+                                                t-options="{&quot;widget&quot;: &quot;date&quot;, &quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/>
+                                        </div>
                                     </div>
                                 </div>
+
                                 <div class="col-6">
                                     <div class="row mb-1">
                                         <div class="col-5 info-label">Currency</div>
@@ -195,8 +325,8 @@
                                         <div class="col-7">: <span t-esc="'%.2f' % (o.commission_rate or 0.0)"/>%</div>
                                     </div>
                                     <div class="row mb-1">
-                                        <div class="col-5 info-label">Destination</div>
-                                        <div class="col-7">: <span t-field="o.destination_location_id.display_name"/></div>
+                                        <div class="col-5 info-label">Source</div>
+                                        <div class="col-7">: <span t-field="o.source_location_id.display_name"/></div>
                                     </div>
                                 </div>
                             </div>
@@ -204,45 +334,112 @@
                             <table class="line-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 6%;">No</th>
-                                        <th style="width: 18%;">Product</th>
-                                        <th style="width: 20%;">Description</th>
+                                        <th class="no-cell">No</th>
+                                        <th style="width: 20%;">Product</th>
+                                        <th style="width: 24%;">Description</th>
                                         <th style="width: 9%;" class="text-end">Qty</th>
-                                        <th style="width: 10%;">UoM</th>
-                                        <th style="width: 13%;" class="text-end">Unit Price</th>
-                                        <th style="width: 8%;" class="text-end">Disc %</th>
-                                        <th style="width: 8%;" class="text-end">Comm %</th>
-                                        <th style="width: 15%;" class="text-end">Subtotal</th>
+                                        <th style="width: 9%;">UoM</th>
+                                        <th style="width: 14%;" class="text-end">Unit Price</th>
+                                        <th style="width: 7%;" class="text-end">Disc %</th>
+                                        <th style="width: 16%; padding-right: 4px;" class="text-end">Subtotal</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
                                     <tr t-foreach="o.line_ids" t-as="line">
-                                        <td><span t-esc="line_index + 1"/></td>
-                                        <td><span t-field="line.product_id.display_name"/></td>
-                                        <td><span t-field="line.name"/></td>
-                                        <td class="text-end"><span t-field="line.product_uom_qty"/></td>
-                                        <td><span t-field="line.product_uom_id.name"/></td>
-                                        <td class="text-end amount-cell"><span t-field="line.consignment_price_unit" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></td>
-                                        <td class="text-end"><span t-esc="'%.2f' % (line.consignment_discount or 0.0)"/></td>
-                                        <td class="text-end"><span t-esc="'%.2f' % (line.commission_rate or 0.0)"/></td>
-                                        <td class="text-end amount-cell"><span t-field="line.consignment_subtotal" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></td>
+                                        <td class="no-cell">
+                                            <span t-esc="line_index + 1"/>
+                                        </td>
+                                        <td class="text-cell">
+                                            <span t-field="line.product_id.display_name"/>
+                                        </td>
+                                        <td class="text-cell">
+                                            <span t-field="line.name"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-field="line.product_uom_qty"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.product_uom_id.name"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-field="line.consignment_price_unit"
+                                                t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-esc="'%.2f' % (line.consignment_discount or 0.0)"/>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <span t-field="line.consignment_subtotal"
+                                                t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                        </td>
                                     </tr>
                                 </tbody>
+
                                 <tfoot>
                                     <tr>
-                                        <td colspan="8" class="text-end"><strong>Total Amount</strong></td>
-                                        <td class="text-end amount-cell"><strong><span t-field="o.amount_total" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></strong></td>
+                                        <td colspan="5" style="border: none; !important"></td>
+                                        <td colspan="2" class="text-end">
+                                            <strong>Total Amount</strong>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <strong>
+                                                <span t-field="o.amount_total"
+                                                    t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                            </strong>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="8" class="text-end"><strong>Commission Amount</strong></td>
-                                        <td class="text-end amount-cell"><strong><span t-field="o.commission_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></strong></td>
+                                        <td colspan="5" style="border: none; !important"></td>
+                                        <td colspan="2" class="text-end">
+                                            <strong>Commission Amount</strong>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <strong>
+                                                <span t-field="o.commission_amount"
+                                                    t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                            </strong>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="8" class="text-end"><strong>Net Amount</strong></td>
-                                        <td class="text-end amount-cell"><strong><span t-field="o.net_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/></strong></td>
+                                        <td colspan="5" style="border: none; !important"></td>
+                                        <td colspan="2" class="text-end">
+                                            <strong>Net Amount</strong>
+                                        </td>
+                                        <td class="text-end amount-cell">
+                                            <strong>
+                                                <span t-field="o.net_amount"
+                                                    t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                            </strong>
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
+                            <!-- SIGNATURE -->
+                            <div class="mt-4" style="page-break-inside: avoid;">
+
+                                <div class="row text-center">
+                                    <div class="col-4"><strong>Approved By</strong></div>
+                                    <div class="col-4"><strong>Received By</strong></div>
+                                    <div class="col-4"><strong>Paid By</strong></div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <t t-foreach="[1,2,3]" t-as="x">
+                                        <div class="col-4 px-3">
+                                            <div style="border-bottom: 1px dotted black; height: 12px;"/>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <t t-foreach="[1,2,3]" t-as="x">
+                                        <div class="col-4 px-3">
+                                            <div style="border-bottom: 1px dotted black; height: 12px;"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </t>

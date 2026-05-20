@@ -36,6 +36,7 @@
                     line-height: 1.25;
                     white-space: nowrap;
                     padding-right: 6mm;
+                    vartical-align: middle;
                 }
 
                 .consignment-order-address-block div,
@@ -45,6 +46,7 @@
 
                 .consignment-order-logo {
                     max-height: 80px;
+                    vartical-align: top;
                 }
 
                 .consignment-order-clear {
