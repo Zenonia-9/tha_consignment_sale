@@ -36,7 +36,25 @@ class ThaConsignmentOrder(models.Model):
         copy=False,
     )
     picking_id = fields.Many2one("stock.picking", string="Related Transfer", copy=False, readonly=True)
-    picking_state = fields.Selection(related="picking_id.state", string="Transfer Status")
+    picking_state = fields.Selection(related="picking_id.state", string="Primary Transfer Status")
+    picking_ids = fields.One2many("stock.picking", "tha_consignment_order_id", string="Transfer Records")
+    transfer_count = fields.Integer(compute="_compute_transfer_summary", store=True, string="Transfers")
+    open_transfer_count = fields.Integer(compute="_compute_transfer_summary", store=True, string="Open Transfers")
+    transfer_state = fields.Selection(
+        [
+            ("no_transfer", "No Transfer"),
+            ("draft", "Draft"),
+            ("waiting", "Waiting"),
+            ("confirmed", "Waiting"),
+            ("assigned", "Ready"),
+            ("partially_done", "Partially Done"),
+            ("done", "Done"),
+            ("cancel", "Cancelled"),
+        ],
+        compute="_compute_transfer_summary",
+        store=True,
+        string="Transfer Status",
+    )
     line_ids = fields.One2many("tha.consignment.order.line", "order_id", string="Order Lines", copy=True)
     amount_total = fields.Monetary(compute="_compute_amounts", store=True)
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
@@ -53,6 +71,31 @@ class ThaConsignmentOrder(models.Model):
             order.amount_total = sum(order.line_ids.mapped("consignment_subtotal"))
             order.commission_amount = sum(line.consignment_subtotal * line.commission_rate / 100.0 for line in order.line_ids)
             order.net_amount = order.amount_total - order.commission_amount
+
+    @api.depends("picking_ids", "picking_ids.state")
+    def _compute_transfer_summary(self):
+        active_states = ("draft", "waiting", "confirmed", "assigned")
+        state_priority = {
+            "assigned": 4,
+            "confirmed": 3,
+            "waiting": 2,
+            "draft": 1,
+        }
+        for order in self:
+            pickings = order.picking_ids
+            states = pickings.mapped("state")
+            order.transfer_count = len(pickings)
+            order.open_transfer_count = len(pickings.filtered(lambda picking: picking.state in active_states))
+            if not states:
+                order.transfer_state = "no_transfer"
+            elif all(state == "cancel" for state in states):
+                order.transfer_state = "cancel"
+            elif all(state in ("done", "cancel") for state in states) and "done" in states:
+                order.transfer_state = "done"
+            elif "done" in states:
+                order.transfer_state = "partially_done"
+            else:
+                order.transfer_state = max(states, key=lambda state: state_priority.get(state, 0))
 
     @api.constrains("name", "company_id")
     def _check_unique_name(self):
@@ -108,10 +151,12 @@ class ThaConsignmentOrder(models.Model):
 
     def action_cancel(self):
         for order in self:
-            if order.picking_id.state == "done":
-                raise UserError(_("You cannot cancel %s because its transfer is done.") % order.display_name)
-            if order.picking_id and order.picking_id.state != "cancel":
-                order.picking_id.action_cancel()
+            done_pickings = order.picking_ids.filtered(lambda picking: picking.state == "done")
+            if done_pickings:
+                raise UserError(_("You cannot cancel %s because at least one transfer is done.") % order.display_name)
+            pickings_to_cancel = order.picking_ids.filtered(lambda picking: picking.state != "cancel")
+            if pickings_to_cancel:
+                pickings_to_cancel.action_cancel()
             order.state = "cancel"
         return True
 
@@ -119,18 +164,30 @@ class ThaConsignmentOrder(models.Model):
         for order in self:
             if order.state == "confirmed":
                 raise UserError(_("Cancel %s before deleting it.") % order.display_name)
-            if order.picking_id and order.picking_id.state not in ("cancel",):
+            active_pickings = order.picking_ids.filtered(lambda picking: picking.state != "cancel")
+            if active_pickings:
                 raise UserError(_("You cannot delete %s while it is linked to an active transfer.") % order.display_name)
         return super().unlink()
 
     def action_view_transfer(self):
         self.ensure_one()
+        if not self.picking_ids:
+            return {"type": "ir.actions.act_window_close"}
+        if len(self.picking_ids) == 1:
+            return {
+                "type": "ir.actions.act_window",
+                "name": _("Consignment Transfer"),
+                "res_model": "stock.picking",
+                "view_mode": "form",
+                "res_id": self.picking_ids.id,
+            }
         return {
             "type": "ir.actions.act_window",
-            "name": _("Consignment Transfer"),
+            "name": _("Consignment Transfers"),
             "res_model": "stock.picking",
-            "view_mode": "form",
-            "res_id": self.picking_id.id,
+            "view_mode": "list,form",
+            "domain": [("id", "in", self.picking_ids.ids)],
+            "context": {"create": False},
         }
 
     def _validate_print_selection(self):

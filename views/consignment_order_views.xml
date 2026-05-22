@@ -14,11 +14,11 @@
                 <field name="source_location_id" optional="show"/>
                 <field name="destination_location_id" optional="show"/>
                 <field name="amount_total"/>
-                <field name="picking_state" widget="badge"
-                    decoration-info="picking_state == 'assigned'"
-                    decoration-success="picking_state == 'done'"
-                    decoration-warning="picking_state in ('waiting', 'confirmed')"
-                    decoration-danger="picking_state == 'cancel'"/>
+                <field name="transfer_state" widget="badge"
+                    decoration-info="transfer_state == 'assigned'"
+                    decoration-success="transfer_state == 'done'"
+                    decoration-warning="transfer_state in ('waiting', 'confirmed', 'partially_done')"
+                    decoration-danger="transfer_state == 'cancel'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>
@@ -37,8 +37,8 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_transfer" type="object" class="oe_stat_button" icon="fa-truck" invisible="not picking_id">
-                            <field name="picking_state" widget="statinfo" string="Transfer"/>
+                        <button name="action_view_transfer" type="object" class="oe_stat_button" icon="fa-truck" invisible="not transfer_count">
+                            <field name="transfer_count" widget="statinfo" string="Transfers"/>
                         </button>
                     </div>
                     <div class="oe_title">
@@ -107,14 +107,14 @@
                 <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
                 <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
                 <separator/>
-                <filter name="transfer_done" string="Transfer Done" domain="[('picking_state', '=', 'done')]"/>
-                <filter name="transfer_pending" string="Transfer Pending" domain="[('picking_state', 'not in', ['done', 'cancel'])]"/>
+                <filter name="transfer_done" string="Transfer Done" domain="[('transfer_state', '=', 'done')]"/>
+                <filter name="transfer_pending" string="Transfer Pending" domain="[('transfer_state', 'not in', ['done', 'cancel', 'no_transfer'])]"/>
                 <separator/>
                 <filter name="date_order" string="Order Date" date="date_order"/>
                 <group>
                     <filter name="group_shop" string="Shop" context="{'group_by': 'partner_id'}"/>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
-                    <filter name="group_transfer_status" string="Transfer Status" context="{'group_by': 'picking_state'}"/>
+                    <filter name="group_transfer_status" string="Transfer Status" context="{'group_by': 'transfer_state'}"/>
                     <filter name="group_source_location" string="Source Location" context="{'group_by': 'source_location_id'}"/>
                     <filter name="group_destination_location" string="Destination Location" context="{'group_by': 'destination_location_id'}"/>
                     <filter name="group_date" string="Order Date" context="{'group_by': 'date_order'}"/>
