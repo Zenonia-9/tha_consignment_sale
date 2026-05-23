@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>THA Consignment Sale</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #333840;
+    background: #ffffff;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 48px 32px; }
+
+  /* Hero */
+  .hero { padding: 48px; border-radius: 12px; background: #f8fafc; border: 1px solid #dddddd; margin-bottom: 48px; }
+  .hero h1 { font-size: 40px; font-weight: 400; line-height: 1.2; color: #181d26; margin-bottom: 16px; }
+  .hero p { font-size: 16px; color: #333840; max-width: 680px; margin-bottom: 24px; }
+  .badge {
+    display: inline-block; padding: 4px 12px; border-radius: 9999px;
+    background: #f3eef6; color: #714B67;
+    font-size: 13px; font-weight: 500;
+    margin-right: 6px; margin-bottom: 6px;
+    border: 1px solid #d9c8e0;
+  }
+
+  /* Section headings */
+  h2 { font-size: 32px; font-weight: 400; line-height: 1.2; color: #181d26; margin-bottom: 20px; }
+  h3 { font-size: 18px; font-weight: 500; line-height: 1.4; color: #181d26; margin-bottom: 12px; }
+
+  /* Feature cards grid */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 48px; }
+  .feature-card {
+    background: #f8fafc; border: 1px solid #dddddd; border-radius: 10px;
+    padding: 24px;
+  }
+  .feature-card .icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: #714B67; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .feature-card .icon svg { width: 18px; height: 18px; fill: #ffffff; }
+  .feature-card h3 { font-size: 16px; margin-bottom: 6px; }
+  .feature-card p { font-size: 13px; color: #41454d; line-height: 1.5; }
+
+  /* Signature dark card */
+  .signature-dark {
+    background: #181d26; color: #ffffff; border-radius: 12px;
+    padding: 48px; margin-bottom: 48px;
+  }
+  .signature-dark h2 { color: #ffffff; margin-bottom: 12px; }
+  .signature-dark p { color: rgba(255,255,255,0.75); font-size: 15px; max-width: 640px; }
+
+  /* Workflow steps */
+  .steps { margin-bottom: 48px; }
+  .step { display: flex; gap: 20px; margin-bottom: 20px; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: #714B67; color: #ffffff;
+    font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-body h3 { font-size: 16px; margin-bottom: 4px; }
+  .step-body p { font-size: 13px; color: #41454d; }
+
+  /* Demo / screenshot cards */
+  .media-section { margin-bottom: 48px; }
+  .media-card {
+    margin-bottom: 20px; padding: 20px;
+    border: 1px solid #dddddd; border-radius: 10px;
+    background: #ffffff;
+  }
+  .media-card h3 { font-size: 15px; margin-bottom: 12px; color: #181d26; }
+  .media-card img {
+    width: 100%; height: auto; border-radius: 8px;
+    border: 1px solid #dddddd; display: block;
+  }
+
+  /* Screenshot gallery grid */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 48px; }
+
+  /* Technical highlights */
+  .tech-section { margin-bottom: 48px; }
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .tech-item {
+    border: 1px solid #dddddd; border-radius: 10px;
+    padding: 16px; background: #f8fafc;
+  }
+  .tech-item .label { font-size: 11px; font-weight: 500; color: #714B67; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .tech-item .value { font-size: 14px; color: #181d26; font-weight: 500; }
+
+  /* CTA band */
+  .cta-band {
+    background: #f3eef6; border-radius: 12px;
+    padding: 48px; text-align: center; border: 1px solid #d9c8e0;
+  }
+  .cta-band h2 { font-size: 28px; margin-bottom: 12px; }
+  .cta-band p { color: #41454d; margin-bottom: 0; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid #dddddd; margin: 48px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>THA Consignment Sale</h1>
+    <p>
+      A complete Odoo 19 consignment workflow covering orders, stock transfers,
+      partial deliveries, backorders, settlements, customer invoices, commission bills,
+      returns, and printable PDF reports.
+    </p>
+    <div>
+      <span class="badge">Odoo 19</span>
+      <span class="badge">Inventory</span>
+      <span class="badge">Accounting</span>
+      <span class="badge">QWeb Reports</span>
+      <span class="badge">Backorder Workflow</span>
+    </div>
+  </section>
+
+  <!-- Feature cards -->
+  <section style="margin-bottom:48px;">
+    <h2>Main Features</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div>
+        <h3>Consignment Orders</h3>
+        <p>Create and confirm consignment orders that automatically generate stock issue transfers to the shop.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+        <h3>Backorder Tracking</h3>
+        <p>Backorder-aware transfer tracking using linked consignment pickings — partial deliveries handled seamlessly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg></div>
+        <h3>Settlement Workflow</h3>
+        <p>Settlement records for sold consignment stock with automatic stock-out, invoice, and commission bill creation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div>
+        <h3>PDF Reports</h3>
+        <p>A4/A5 QWeb PDF reports with a print wizard — professional consignment order documents ready to send.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <h3>Commission Bills</h3>
+        <p>Automatic vendor commission bill creation on settlement confirmation, linked to the commission product template.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M19 7l-.81-1.62C17.72 4.54 16.9 4 16 4H8c-.9 0-1.72.54-2.19 1.38L5 7H3c-1.1 0-2 .9-2 2v1c0 .55.45 1 1 1h1v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h1c.55 0 1-.45 1-1V9c0-1.1-.9-2-2-2h-2zm-7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg></div>
+        <h3>Returns</h3>
+        <p>Return workflow for unsold consignment stock, linked back to the original consignment order.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Workflow demo -->
+  <section class="media-section">
+    <h2>Workflow Demo</h2>
+    <div class="media-card">
+      <h3>Consignment order with partial transfer and backorder</h3>
+      <img src="demo/01_order_workflow_with_backorder.gif" alt="Consignment order workflow with partial transfer and backorder">
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Configuration steps -->
+  <section class="steps">
+    <h2>Configuration Steps</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Set up the consignment shop partner</h3>
+        <p>Enable the consignment shop flag on the partner record and configure the consignment location, pricelist, and commission percentage.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Configure the consignment warehouse</h3>
+        <p>Set the source and destination warehouse for consignment stock movements.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Create and confirm a consignment order</h3>
+        <p>Confirm the order to automatically generate the issue transfer to the shop.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Validate transfers (with backorder support)</h3>
+        <p>Validate full or partial transfers. Backorders remain linked to the consignment order via the transfer smart button.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3>Create a settlement</h3>
+        <p>Record sold items, confirm the settlement to create stock-out, then generate the customer invoice and commission vendor bill.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h3>Process returns (optional)</h3>
+        <p>Use the return workflow to send unsold stock back to the source warehouse.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Screenshots -->
+  <section class="media-section">
+    <h2>Screenshots</h2>
+
+    <div class="gallery">
+      <div class="media-card">
+        <h3>1. Consignment shop setup</h3>
+        <img src="screenshots/01_consignment_shop_partner_setup.jpg" alt="Consignment shop partner setup">
+      </div>
+      <div class="media-card">
+        <h3>2. Consignment warehouse setup</h3>
+        <img src="screenshots/02_consignment_warehouse_setup.jpg" alt="Consignment warehouse setup">
+      </div>
+    </div>
+
+    <div class="media-card">
+      <h3>3. Consignment order list</h3>
+      <img src="screenshots/03_consignment_order_list.jpg" alt="Consignment order list">
+    </div>
+    <div class="media-card">
+      <h3>4. Consignment order form</h3>
+      <img src="screenshots/04_consignment_order_form.jpg" alt="Consignment order form">
+    </div>
+
+    <div class="gallery">
+      <div class="media-card">
+        <h3>5. Transfer smart button and status</h3>
+        <img src="screenshots/05_transfer_smart_button_status.jpg" alt="Transfer smart button and transfer status">
+      </div>
+      <div class="media-card">
+        <h3>6. Partial transfer and backorder</h3>
+        <img src="screenshots/06_partial_transfer_backorder.jpg" alt="Partial transfer and backorder">
+      </div>
+    </div>
+
+    <div class="media-card">
+      <h3>7. Consignment transfers list</h3>
+      <img src="screenshots/07_consignment_transfers_list.jpg" alt="Consignment transfers list">
+    </div>
+    <div class="media-card">
+      <h3>8. Consignment settlement list</h3>
+      <img src="screenshots/08_consignment_settlement_list.jpg" alt="Consignment settlement list">
+    </div>
+
+    <div class="gallery">
+      <div class="media-card">
+        <h3>9. Invoice and commission bill actions</h3>
+        <img src="screenshots/09_create_invoice_commission_bill_buttons.jpg" alt="Invoice and commission bill actions">
+      </div>
+      <div class="media-card">
+        <h3>10. Created invoice and commission bill</h3>
+        <img src="screenshots/10_created_invoice_and_commission_bill.jpg" alt="Created invoice and commission bill">
+      </div>
+    </div>
+
+    <div class="media-card">
+      <h3>11. Consignment return form</h3>
+      <img src="screenshots/11_consignment_return_form.jpg" alt="Consignment return form">
+    </div>
+
+    <div class="gallery">
+      <div class="media-card">
+        <h3>12. Consignment order print wizard</h3>
+        <img src="screenshots/12_consignment_order_print_wizard.jpg" alt="Consignment order print wizard">
+      </div>
+      <div class="media-card">
+        <h3>13. Consignment order PDF report</h3>
+        <img src="screenshots/13_consignment_order_pdf_report.jpg" alt="Consignment order PDF report">
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Technical highlights -->
+  <section class="tech-section">
+    <h2>Technical Highlights</h2>
+    <div class="tech-grid">
+      <div class="tech-item"><div class="label">Odoo Version</div><div class="value">19.0</div></div>
+      <div class="tech-item"><div class="label">Category</div><div class="value">Inventory</div></div>
+      <div class="tech-item"><div class="label">License</div><div class="value">LGPL-3</div></div>
+      <div class="tech-item"><div class="label">Dependencies</div><div class="value">stock, account, contacts, product</div></div>
+      <div class="tech-item"><div class="label">Reports</div><div class="value">QWeb PDF (A4 / A5)</div></div>
+      <div class="tech-item"><div class="label">Author</div><div class="value">Thein Htoo Aung</div></div>
+    </div>
+  </section>
+
+  <!-- CTA band -->
+  <section class="cta-band">
+    <h2>Ready to manage consignments in Odoo 19?</h2>
+    <p>Install THA Consignment Sale and run your full consignment workflow from a single module.</p>
+  </section>
+
+</div>
+</body>
+</html>

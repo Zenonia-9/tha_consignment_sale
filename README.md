@@ -60,6 +60,68 @@ tha_consignment_sale/
 2. Restart Odoo and update the Apps list.
 3. Install **THA Consignment Sale**.
 
+## Demo
+
+### Consignment order workflow with partial transfer and backorder
+
+![Consignment order workflow with backorder](static/description/demo/01_order_workflow_with_backorder.gif)
+
+This demo shows the main workflow: creating a consignment order, confirming it, validating a partial stock transfer, creating a backorder, and returning to the consignment order where the transfer status/count remains linked to the consignment workflow.
+
+## Screenshots
+
+### 1. Consignment shop setup
+
+![Consignment shop setup](static/description/screenshots/01_consignment_shop_partner_setup.jpg)
+
+### 2. Consignment warehouse setup
+
+![Consignment warehouse setup](static/description/screenshots/02_consignment_warehouse_setup.jpg)
+
+### 3. Consignment order list
+
+![Consignment order list](static/description/screenshots/03_consignment_order_list.jpg)
+
+### 4. Consignment order form
+
+![Consignment order form](static/description/screenshots/04_consignment_order_form.jpg)
+
+### 5. Transfer smart button and transfer status
+
+![Transfer smart button and transfer status](static/description/screenshots/05_transfer_smart_button_status.jpg)
+
+### 6. Partial transfer and backorder
+
+![Partial transfer and backorder](static/description/screenshots/06_partial_transfer_backorder.jpg)
+
+### 7. Consignment transfers list
+
+![Consignment transfers list](static/description/screenshots/07_consignment_transfers_list.jpg)
+
+### 8. Consignment settlement list
+
+![Consignment settlement list](static/description/screenshots/08_consignment_settlement_list.jpg)
+
+### 9. Invoice and commission bill actions
+
+![Invoice and commission bill actions](static/description/screenshots/09_create_invoice_commission_bill_buttons.jpg)
+
+### 10. Created invoice and commission bill
+
+![Created invoice and commission bill](static/description/screenshots/10_created_invoice_and_commission_bill.jpg)
+
+### 11. Consignment return form
+
+![Consignment return form](static/description/screenshots/11_consignment_return_form.jpg)
+
+### 12. Consignment order print wizard
+
+![Consignment order print wizard](static/description/screenshots/12_consignment_order_print_wizard.jpg)
+
+### 13. Consignment order PDF report
+
+![Consignment order PDF report](static/description/screenshots/13_consignment_order_pdf_report.jpg)
+
 ## License
 
 LGPL-3
