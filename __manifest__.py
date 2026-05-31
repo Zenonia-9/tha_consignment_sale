@@ -1,5 +1,5 @@
 {
-    "name": "THA Consignment Sale",
+    "name": "Consignment Sale",
     "summary": "Consignment orders, settlement, commission, and return flow",
     "version": "19.0.1.0.0",
     "category": "Inventory",
@@ -7,8 +7,8 @@
     "license": "LGPL-3",
     "depends": ["stock", "account", "contacts", "product"],
     "description": """
-THA Consignment Sale
-=====================
+Consignment Sale
+================
 
 This module implements a consignment workflow for Odoo 19.
 
@@ -20,7 +20,7 @@ Features
 
 Installation
 1. Place this module in your addons path.
-2. Update the apps list and install "THA Consignment Sale".
+2. Update the apps list and install "Consignment Sale".
 """,
     "data": [
         "security/ir.model.access.csv",

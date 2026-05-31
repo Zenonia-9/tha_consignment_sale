@@ -1,4 +1,4 @@
-# THA Consignment Sale
+# Consignment Sale
 
 ![Odoo 19](https://img.shields.io/badge/Odoo-19.0-875A7B?style=flat-square)
 ![License](https://img.shields.io/badge/License-LGPL--3-blue?style=flat-square)
@@ -58,7 +58,7 @@ tha_consignment_sale/
 
 1. Place the module in your custom addons path.
 2. Restart Odoo and update the Apps list.
-3. Install **THA Consignment Sale**.
+3. Install **Consignment Sale**.
 
 ## Demo
 
