@@ -15,13 +15,6 @@
             <field name="padding">5</field>
         </record>
 
-        <record id="seq_consignment_return" model="ir.sequence">
-            <field name="name">Consignment Return</field>
-            <field name="code">tha.consignment.return</field>
-            <field name="prefix">CR</field>
-            <field name="padding">5</field>
-        </record>
-
         <record id="seq_picking_consignment_issue" model="ir.sequence">
             <field name="name">Consignment Issue Transfer</field>
             <field name="prefix">CON/ISS/</field>
@@ -32,13 +25,6 @@
         <record id="seq_picking_consignment_sold" model="ir.sequence">
             <field name="name">Consignment Sold Transfer</field>
             <field name="prefix">CON/SOLD/</field>
-            <field name="padding">5</field>
-            <field name="company_id" eval="False"/>
-        </record>
-
-        <record id="seq_picking_consignment_return" model="ir.sequence">
-            <field name="name">Consignment Return Transfer</field>
-            <field name="prefix">CON/RET/</field>
             <field name="padding">5</field>
             <field name="company_id" eval="False"/>
         </record>
@@ -62,18 +48,6 @@
             <field name="sequence_id" ref="seq_picking_consignment_sold"/>
             <field name="default_location_src_id" ref="stock.stock_location_stock"/>
             <field name="default_location_dest_id" ref="stock.stock_location_customers"/>
-            <field name="use_create_lots">False</field>
-            <field name="use_existing_lots">True</field>
-            <field name="active" eval="False"/>
-        </record>
-
-        <record id="picking_type_consignment_return" model="stock.picking.type">
-            <field name="name">Consignment Return</field>
-            <field name="code">internal</field>
-            <field name="sequence_code">CONRET</field>
-            <field name="sequence_id" ref="seq_picking_consignment_return"/>
-            <field name="default_location_src_id" ref="stock.stock_location_stock"/>
-            <field name="default_location_dest_id" ref="stock.stock_location_stock"/>
             <field name="use_create_lots">False</field>
             <field name="use_existing_lots">True</field>
             <field name="active" eval="False"/>

@@ -7,7 +7,6 @@ class StockPicking(models.Model):
     tha_is_consignment_transfer = fields.Boolean(string="Consignment Transfer", copy=False, index=True)
     tha_consignment_order_id = fields.Many2one("tha.consignment.order", string="Consignment Order", copy=False)
     tha_consignment_settlement_id = fields.Many2one("tha.consignment.settlement", string="Consignment Settlement", copy=False)
-    tha_consignment_return_id = fields.Many2one("tha.consignment.return", string="Consignment Return", copy=False)
 
     def _create_backorder_picking(self):
         backorder = super()._create_backorder_picking()
@@ -15,7 +14,6 @@ class StockPicking(models.Model):
             "tha_is_consignment_transfer": self.tha_is_consignment_transfer,
             "tha_consignment_order_id": self.tha_consignment_order_id.id,
             "tha_consignment_settlement_id": self.tha_consignment_settlement_id.id,
-            "tha_consignment_return_id": self.tha_consignment_return_id.id,
         }
         if any(consignment_vals.values()):
             backorder.write(consignment_vals)
@@ -29,7 +27,6 @@ class StockPickingType(models.Model):
         [
             ("issue", "Consignment Issue"),
             ("sold", "Consignment Sold"),
-            ("return", "Consignment Return"),
         ],
         string="Consignment Flow",
         copy=False,
@@ -42,4 +39,3 @@ class StockMove(models.Model):
 
     tha_consignment_order_line_id = fields.Many2one("tha.consignment.order.line", string="Consignment Order Line", copy=False)
     tha_consignment_settlement_line_id = fields.Many2one("tha.consignment.settlement.line", string="Consignment Settlement Line", copy=False)
-    tha_consignment_return_line_id = fields.Many2one("tha.consignment.return.line", string="Consignment Return Line", copy=False)

@@ -5,12 +5,12 @@ from odoo.exceptions import ValidationError
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    is_consignment_shop = fields.Boolean(string="Is Consignment Shop")
+    is_consignment_shop = fields.Boolean(string="Is Consignment Partner")
     consignment_location_id = fields.Many2one(
         "stock.location",
         string="Consignment Location",
         domain=[("usage", "=", "internal")],
-        help="Internal stock location representing this shop's consignment stock.",
+        help="Internal stock location representing this partner's consignment stock.",
     )
     consignment_pricelist_id = fields.Many2one("product.pricelist", string="Consignment Pricelist")
     commission_rate = fields.Float(string="Commission %", default=0.0)
@@ -21,4 +21,4 @@ class ResPartner(models.Model):
             if partner.commission_rate < 0:
                 raise ValidationError(_("Commission cannot be negative."))
             if partner.is_consignment_shop and partner.consignment_location_id and partner.consignment_location_id.usage != "internal":
-                raise ValidationError(_("Consignment shop location must be an internal location."))
+                raise ValidationError(_("Consignment location must be an internal location."))

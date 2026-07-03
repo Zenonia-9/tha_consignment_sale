@@ -10,9 +10,10 @@
                 </header>
                 <field name="name"/>
                 <field name="date_order"/>
+                <field name="commitment_date" optional="show"/>
                 <field name="partner_id"/>
-                <field name="source_location_id" optional="show"/>
-                <field name="destination_location_id" optional="show"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="hide"/>
+                <field name="team_id" optional="hide"/>
                 <field name="amount_total"/>
                 <field name="transfer_state" widget="badge"
                     decoration-info="transfer_state == 'assigned'"
@@ -31,6 +32,7 @@
             <form string="Consignment Order">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_open_settle_wizard" type="object" string="Settle" class="btn-primary" invisible="not can_settle"/>
                     <button name="action_open_print_wizard" type="object" string="Print" invisible="state == 'cancel'"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
@@ -38,53 +40,83 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_transfer" type="object" class="oe_stat_button" icon="fa-truck" invisible="not transfer_count">
-                            <field name="transfer_count" widget="statinfo" string="Transfers"/>
+                            <field name="transfer_count" widget="statinfo" string="Delivery"/>
+                        </button>
+                        <button name="action_view_returns" type="object" class="oe_stat_button" icon="fa-reply" invisible="not return_count">
+                            <field name="return_count" widget="statinfo" string="Returns"/>
+                        </button>
+                        <button name="action_view_settlements" type="object" class="oe_stat_button" icon="fa-files-o" invisible="not settlement_count">
+                            <field name="settlement_count" widget="statinfo" string="Settlements"/>
                         </button>
                     </div>
                     <div class="oe_title">
-                        <h1><field name="name"/></h1>
+                        <h1><field name="name" readonly="1"/></h1>
                     </div>
-                    <group>
+                    <group name="order_header">
                         <group>
-                            <field name="partner_id" readonly="state != 'draft'"/>
-                            <field name="date_order" readonly="state != 'draft'"/>
-                            <field name="company_id" readonly="state != 'draft'"/>
-                        </group>
-                        <group>
-                            <field name="pricelist_id" readonly="state != 'draft'"/>
-                            <field name="currency_id" readonly="state != 'draft'"/>
-                            <field name="commission_rate" readonly="state != 'draft'"/>
-                        </group>
-                    </group>
-                    <group string="Locations">
-                        <group>
+                            <field name="partner_id"
+                                   widget="res_partner_many2one"
+                                   context="{'show_address': 1, 'show_vat': True}"
+                                   placeholder="Type to find a customer..."
+                                   readonly="state != 'draft'"/>
                             <field name="source_warehouse_id" readonly="state != 'draft'"/>
                             <field name="source_location_id" readonly="state != 'draft'"/>
                         </group>
                         <group>
+                            <field name="date_order" readonly="state != 'draft'"/>
+                            <field name="commitment_date" readonly="state != 'draft'"/>
+                            <field name="pricelist_id" readonly="state != 'draft'"/>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="commission_rate" readonly="state != 'draft'"/>
                             <field name="destination_warehouse_id" readonly="state != 'draft'"/>
                             <field name="destination_location_id" readonly="state != 'draft'"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Lines">
-                            <field name="line_ids" readonly="state != 'draft'">
+                        <page string="Order Lines" name="order_lines">
+                            <field name="line_ids"
+                                   widget="section_and_note_one2many"
+                                   readonly="state != 'draft'">
                                 <list editable="bottom">
-                                    <field name="sequence" widget="handle"/>
-                                    <field name="product_id"/>
-                                    <field name="product_uom_qty"/>
+                                    <control>
+                                        <create name="add_product_control" string="Add a product"/>
+                                        <create name="add_section_control" string="Add a section" context="{'default_display_type': 'line_section'}"/>
+                                        <create name="add_note_control" string="Add a note" context="{'default_display_type': 'line_note'}"/>
+                                    </control>
+                                    <field name="display_type" force_save="1" column_invisible="True"/>
                                     <field name="allowed_uom_ids" column_invisible="1"/>
-                                    <field name="product_uom_id" widget="many2one_uom"/>
-                                    <field name="consignment_price_unit"/>
-                                    <field name="consignment_discount" optional="hide"/>
-                                    <field name="commission_rate" column_invisible="1"/>
-                                    <field name="consignment_subtotal" readonly="1"/>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" required="not display_type"/>
+                                    <field name="product_uom_qty" invisible="display_type"/>
+                                    <field name="qty_delivered" readonly="1" invisible="display_type"/>
+                                    <field name="qty_invoiced" readonly="1" invisible="display_type"/>
+                                    <field name="qty_returned" readonly="1" invisible="display_type"/>
+                                    <field name="qty_settled" readonly="1" invisible="display_type"/>
+                                    <field name="product_uom_id" widget="many2one_uom" required="not display_type" invisible="display_type"/>
+                                    <field name="consignment_price_unit" invisible="display_type"/>
+                                    <field name="consignment_subtotal" readonly="1" invisible="display_type"/>
                                 </list>
                             </field>
                             <group class="oe_subtotal_footer" colspan="2">
                                 <field name="amount_total" readonly="1"/>
                                 <field name="commission_amount" readonly="1"/>
                                 <field name="net_amount" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Other Info" name="other_information">
+                            <group>
+                                <group string="Sales">
+                                    <field name="user_id" widget="many2one_avatar_user" readonly="state == 'cancel'"/>
+                                    <field name="team_id" readonly="state == 'cancel'" options="{'no_create': True}"/>
+                                    <field name="company_id" readonly="state == 'cancel'" groups="base.group_multi_company"/>
+                                </group>
+                                <group string="Delivery">
+                                    <field name="transfer_state" readonly="1" widget="badge"
+                                        decoration-info="transfer_state == 'assigned'"
+                                        decoration-success="transfer_state == 'done'"
+                                        decoration-warning="transfer_state in ('waiting', 'confirmed', 'partially_done')"
+                                        decoration-danger="transfer_state == 'cancel'"/>
+                                </group>
                             </group>
                         </page>
                     </notebook>
@@ -100,22 +132,22 @@
             <search string="Consignment Orders">
                 <field name="name"/>
                 <field name="partner_id"/>
-                <field name="source_location_id"/>
-                <field name="destination_location_id"/>
+                <field name="user_id"/>
+                <field name="team_id"/>
                 <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
                 <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
                 <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
                 <separator/>
-                <filter name="transfer_done" string="Transfer Done" domain="[('transfer_state', '=', 'done')]"/>
-                <filter name="transfer_pending" string="Transfer Pending" domain="[('transfer_state', 'not in', ['done', 'cancel', 'no_transfer'])]"/>
+                <filter name="delivery_done" string="Delivery Done" domain="[('transfer_state', '=', 'done')]"/>
+                <filter name="delivery_pending" string="Delivery Pending" domain="[('transfer_state', 'not in', ['done', 'cancel', 'no_transfer'])]"/>
                 <separator/>
                 <filter name="date_order" string="Order Date" date="date_order"/>
                 <group>
-                    <filter name="group_shop" string="Shop" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_salesperson" string="Salesperson" context="{'group_by': 'user_id'}"/>
+                    <filter name="group_team" string="Sales Team" context="{'group_by': 'team_id'}"/>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
-                    <filter name="group_transfer_status" string="Transfer Status" context="{'group_by': 'transfer_state'}"/>
-                    <filter name="group_source_location" string="Source Location" context="{'group_by': 'source_location_id'}"/>
-                    <filter name="group_destination_location" string="Destination Location" context="{'group_by': 'destination_location_id'}"/>
+                    <filter name="group_delivery_status" string="Delivery Status" context="{'group_by': 'transfer_state'}"/>
                     <filter name="group_date" string="Order Date" context="{'group_by': 'date_order'}"/>
                 </group>
             </search>
@@ -132,7 +164,7 @@
                 Create a consignment order
             </p>
             <p>
-                Consignment orders are used to transfer stock to shops and track transfer status.
+                Consignment orders control deliveries, returns, and settlements from one document.
             </p>
         </field>
     </record>
