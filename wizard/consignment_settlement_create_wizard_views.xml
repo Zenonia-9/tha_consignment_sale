@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_consignment_settlement_create_wizard_form" model="ir.ui.view">
+        <field name="name">tha.consignment.settlement.create.wizard.form</field>
+        <field name="model">tha.consignment.settlement.create.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Settlement">
+                <group>
+                    <group>
+                        <field name="order_id"/>
+                        <field name="partner_id"/>
+                    </group>
+                    <group>
+                        <field name="settlement_date"/>
+                    </group>
+                </group>
+                <field name="line_ids">
+                    <list editable="bottom" create="0" delete="0">
+                        <field name="sequence" column_invisible="1"/>
+                        <field name="order_line_id" column_invisible="1"/>
+                        <field name="product_id"/>
+                        <field name="name"/>
+                        <field name="remaining_qty" readonly="1"/>
+                        <field name="quantity"/>
+                        <field name="product_uom_id" widget="many2one_uom" readonly="1"/>
+                        <field name="price_unit" readonly="1"/>
+                        <field name="discount" readonly="1"/>
+                        <field name="commission_rate"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_create_draft" string="Create Draft" type="object" class="oe_highlight" data-hotkey="q"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

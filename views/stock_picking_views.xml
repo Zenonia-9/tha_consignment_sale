@@ -11,7 +11,7 @@
                 No consignment transfers yet
             </p>
             <p>
-                Consignment transfers are created automatically when orders or returns are confirmed.
+                Consignment transfers are created automatically from consignment orders and settlements.
             </p>
         </field>
     </record>

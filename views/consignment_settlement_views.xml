@@ -5,23 +5,19 @@
         <field name="model">tha.consignment.settlement</field>
         <field name="arch" type="xml">
             <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
-                <header>
-                    <button name="action_create_invoice" type="object" string="Create Invoices"/>
-                    <button name="action_create_commission_bill" type="object" string="Create Bills"/>
-                </header>
                 <field name="name"/>
+                <field name="order_id"/>
                 <field name="partner_id"/>
-                <field name="period_from" optional="show"/>
-                <field name="date_to" optional="show"/>
-                <field name="source_location_id" optional="show"/>
+                <field name="settlement_date"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="show"/>
                 <field name="amount_total" optional="show"/>
                 <field name="commission_amount" optional="show"/>
                 <field name="net_amount" optional="show"/>
-                <field name="picking_state" widget="badge" optional="show"
-                    decoration-info="picking_state == 'assigned'"
-                    decoration-success="picking_state == 'done'"
-                    decoration-warning="picking_state in ('waiting', 'confirmed')"
-                    decoration-danger="picking_state == 'cancel'"/>
+                <field name="delivery_status" widget="badge" optional="show"
+                    decoration-info="delivery_status == 'assigned'"
+                    decoration-success="delivery_status == 'done'"
+                    decoration-warning="delivery_status in ('waiting', 'confirmed')"
+                    decoration-danger="delivery_status == 'cancel'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>
@@ -34,63 +30,102 @@
             <form string="Consignment Settlement">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm Settlement" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-secondary" invisible="state != 'confirmed' or invoice_id"/>
-                    <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-secondary" invisible="state != 'confirmed' or commission_bill_id or commission_amount == 0"/>
+                    <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-secondary" invisible="state != 'confirmed'"/>
+                    <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-secondary" invisible="state != 'confirmed' or commission_amount == 0"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_stock_out" type="object" class="oe_stat_button" icon="fa-truck" invisible="not picking_id">
-                            <field name="picking_state" widget="statinfo" string="Stock Out"/>
+                        <button name="action_view_order" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not order_id">
+                            <span class="o_stat_text">Consignment Order</span>
+                        </button>
+                        <button name="action_view_delivery" type="object" class="oe_stat_button" icon="fa-truck" invisible="not picking_id">
+                            <span class="o_stat_text">Delivery</span>
                         </button>
                         <button name="action_view_invoice" type="object" class="oe_stat_button" icon="fa-pencil-square-o" invisible="not invoice_id">
-                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                            <field name="invoice_count" widget="statinfo" string="Invoice"/>
                         </button>
                         <button name="action_view_commission_bill" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not commission_bill_id">
-                            <field name="commission_bill_count" widget="statinfo" string="Bills"/>
+                            <field name="commission_bill_count" widget="statinfo" string="Bill"/>
                         </button>
                     </div>
-                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
                     <group>
                         <group>
                             <field name="partner_id" readonly="state != 'draft'"/>
-                            <field name="period_from" readonly="state != 'draft'"/>
-                            <field name="date_to" readonly="state != 'draft'"/>
-                            <field name="company_id" readonly="state != 'draft'"/>
+                            <field name="order_id" readonly="1"/>
+                            <field name="settlement_date" readonly="state != 'draft'"/>
+                            <field name="warehouse_id" readonly="state != 'draft'"/>
                         </group>
                         <group>
-                            <field name="source_location_id" readonly="state != 'draft'"/>
                             <field name="pricelist_id" readonly="state != 'draft'"/>
-                            <field name="currency_id" readonly="state != 'draft'"/>
                             <field name="commission_rate" readonly="state != 'draft'"/>
+                            <field name="source_location_id" readonly="state != 'draft'"/>
+                            <field name="delivery_status" widget="badge" readonly="1"
+                                decoration-info="delivery_status == 'assigned'"
+                                decoration-success="delivery_status == 'done'"
+                                decoration-warning="delivery_status in ('waiting', 'confirmed')"
+                                decoration-danger="delivery_status == 'cancel'"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Sold Products">
-                            <field name="line_ids" readonly="state != 'draft'">
+                        <page string="Settlement Lines" name="settlement_lines">
+                            <field name="line_ids"
+                                   widget="section_and_note_one2many"
+                                   readonly="state != 'draft'">
                                 <list editable="bottom">
-                                    <field name="sequence" widget="handle"/>
-                                    <field name="product_id"/>
+                                    <control>
+                                        <create name="add_product_control" string="Add a product"/>
+                                        <create name="add_section_control" string="Add a section" context="{'default_display_type': 'line_section'}"/>
+                                        <create name="add_note_control" string="Add a note" context="{'default_display_type': 'line_note'}"/>
+                                    </control>
+                                    <field name="display_type" force_save="1" column_invisible="True"/>
                                     <field name="allowed_uom_ids" column_invisible="1"/>
-                                    <field name="available_qty" column_invisible="1"/>
-                                    <field name="availability_state" widget="badge" readonly="1" optional="show" column_invisible="parent.state != 'draft'"
-                                        decoration-success="availability_state == 'available'"
-                                        decoration-danger="availability_state == 'not_available'"/>
-                                    <field name="sold_qty"/>
-                                    <field name="product_uom_id" widget="many2one_uom"/>
-                                    <field name="price_unit"/>
-                                    <field name="discount" optional="hide"/>
-                                    <field name="commission_rate" column_invisible="1"/>
-                                    <field name="subtotal" readonly="1" optional="show"/>
-                                    <field name="commission_amount" readonly="1" optional="hide"/>
-                                    <field name="net_amount" readonly="1" optional="hide"/>
+                                    <field name="order_line_id" optional="hide" invisible="display_type"/>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" required="not display_type"/>
+                                    <field name="name" widget="section_and_note_text"/>
+                                    <field name="product_uom_qty" invisible="display_type"/>
+                                    <field name="product_uom_id" widget="many2one_uom" required="not display_type" invisible="display_type"/>
+                                    <field name="available_qty" readonly="1" invisible="display_type"/>
+                                    <field name="price_unit" invisible="display_type"/>
+                                    <field name="discount" invisible="display_type"/>
+                                    <field name="commission_rate" invisible="display_type"/>
+                                    <field name="subtotal" readonly="1" invisible="display_type"/>
                                 </list>
                             </field>
                             <group class="oe_subtotal_footer" colspan="2">
                                 <field name="amount_total" readonly="1"/>
                                 <field name="commission_amount" readonly="1"/>
                                 <field name="net_amount" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Other Info" name="other_information">
+                            <group>
+                                <group string="Sales">
+                                    <field name="user_id" widget="many2one_avatar_user"/>
+                                    <field name="team_id" options="{'no_create': True}"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                </group>
+                                <group string="Invoicing">
+                                    <field name="partner_invoice_id"/>
+                                    <field name="payment_term_id"/>
+                                    <field name="fiscal_position_id"/>
+                                </group>
+                                <group string="Delivery">
+                                    <field name="warehouse_id" readonly="1"/>
+                                    <field name="order_id" string="Source" readonly="1"/>
+                                    <field name="effective_date" readonly="1"/>
+                                    <field name="delivery_status" widget="badge" readonly="1"
+                                        decoration-info="delivery_status == 'assigned'"
+                                        decoration-success="delivery_status == 'done'"
+                                        decoration-warning="delivery_status in ('waiting', 'confirmed')"
+                                        decoration-danger="delivery_status == 'cancel'"/>
+                                </group>
+                                <group string="Tracking"/>
                             </group>
                         </page>
                     </notebook>
@@ -105,25 +140,22 @@
         <field name="arch" type="xml">
             <search string="Consignment Settlements">
                 <field name="name"/>
+                <field name="order_id"/>
                 <field name="partner_id"/>
-                <field name="source_location_id"/>
+                <field name="user_id"/>
                 <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
                 <filter name="confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
                 <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancel')]"/>
                 <separator/>
                 <filter name="has_invoice" string="Has Invoice" domain="[('invoice_id', '!=', False)]"/>
-                <filter name="no_invoice" string="To Invoice" domain="[('state', '=', 'confirmed'), ('invoice_id', '=', False)]"/>
                 <filter name="has_bill" string="Has Bill" domain="[('commission_bill_id', '!=', False)]"/>
-                <filter name="no_bill" string="To Bill" domain="[('state', '=', 'confirmed'), ('commission_amount', '>', 0), ('commission_bill_id', '=', False)]"/>
                 <separator/>
-                <filter name="period_from" string="Period From" date="period_from"/>
-                <filter name="date_to" string="Period To" date="date_to"/>
+                <filter name="settlement_date" string="Settlement Date" date="settlement_date"/>
                 <group>
-                    <filter name="group_shop" string="Shop" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_salesperson" string="Salesperson" context="{'group_by': 'user_id'}"/>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
-                    <filter name="group_source_location" string="Source Location" context="{'group_by': 'source_location_id'}"/>
-                    <filter name="group_period_from" string="Period From" context="{'group_by': 'period_from'}"/>
-                    <filter name="group_period_to" string="Period To" context="{'group_by': 'date_to'}"/>
+                    <filter name="group_date" string="Settlement Date" context="{'group_by': 'settlement_date'}"/>
                 </group>
             </search>
         </field>
@@ -135,14 +167,14 @@
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_tha_consignment_settlement_list"/>
         <field name="search_view_id" ref="view_tha_consignment_settlement_search"/>
+        <field name="context">{'create': False}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create a consignment settlement
+                No settlements yet
             </p>
             <p>
-                Consignment settlements are used to track sold products and calculate commissions.
+                Settlements are created from confirmed consignment orders.
             </p>
         </field>
     </record>
-
 </odoo>
