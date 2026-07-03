@@ -5,19 +5,29 @@
         <field name="model">tha.consignment.settlement</field>
         <field name="arch" type="xml">
             <list decoration-muted="state == 'cancel'" decoration-info="state == 'draft'">
+                <field name="currency_id" column_invisible="1"/>
+                <field name="invoice_id" column_invisible="1"/>
+                <field name="commission_bill_id" column_invisible="1"/>
                 <field name="name"/>
                 <field name="order_id"/>
                 <field name="partner_id"/>
                 <field name="settlement_date"/>
-                <field name="user_id" widget="many2one_avatar_user" optional="show"/>
-                <field name="amount_total" optional="show"/>
-                <field name="commission_amount" optional="show"/>
-                <field name="net_amount" optional="show"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="hide"/>
+                <field name="team_id" optional="hide"/>
+                <field name="amount_total" widget="monetary" optional="show"
+                    decoration-info="state == 'confirmed' and not invoice_id"/>
+                <field name="commission_amount" widget="monetary" optional="show"
+                    decoration-info="state == 'confirmed' and commission_amount and not commission_bill_id"/>
+                <field name="net_amount" widget="monetary" optional="show"
+                    decoration-info="state == 'confirmed' and (not invoice_id or (commission_amount and not commission_bill_id))"/>
                 <field name="delivery_status" widget="badge" optional="show"
                     decoration-info="delivery_status == 'assigned'"
                     decoration-success="delivery_status == 'done'"
                     decoration-warning="delivery_status in ('waiting', 'confirmed')"
                     decoration-danger="delivery_status == 'cancel'"/>
+                <field name="invoice_status" widget="badge" optional="show"
+                    decoration-success="invoice_status == 'invoiced'"
+                    decoration-info="invoice_status == 'to invoice'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
             </list>
         </field>
@@ -85,14 +95,12 @@
                                     </control>
                                     <field name="display_type" force_save="1" column_invisible="True"/>
                                     <field name="allowed_uom_ids" column_invisible="1"/>
-                                    <field name="order_line_id" optional="hide" invisible="display_type"/>
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id" required="not display_type"/>
-                                    <field name="name" widget="section_and_note_text"/>
+                                    <field name="name" widget="section_and_note_text" invisible="not display_type"/>
                                     <field name="product_uom_qty" invisible="display_type"/>
                                     <field name="product_uom_id" widget="many2one_uom" required="not display_type" invisible="display_type"/>
                                     <field name="price_unit" invisible="display_type"/>
-                                    <field name="discount" invisible="display_type"/>
                                     <field name="subtotal" readonly="1" invisible="display_type"/>
                                 </list>
                             </field>
@@ -113,6 +121,10 @@
                                     <field name="partner_invoice_id"/>
                                     <field name="payment_term_id"/>
                                     <field name="fiscal_position_id"/>
+                                    <field name="journal_id"/>
+                                    <field name="invoice_status" widget="badge"
+                                        decoration-success="invoice_status == 'invoiced'"
+                                        decoration-info="invoice_status == 'to invoice'"/>
                                 </group>
                                 <group string="Delivery">
                                     <field name="warehouse_id" readonly="1"/>
@@ -124,7 +136,6 @@
                                         decoration-warning="delivery_status in ('waiting', 'confirmed')"
                                         decoration-danger="delivery_status == 'cancel'"/>
                                 </group>
-                                <group string="Tracking"/>
                             </group>
                         </page>
                     </notebook>

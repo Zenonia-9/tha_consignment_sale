@@ -16,6 +16,13 @@ class ThaConsignmentSettlement(models.Model):
     company_id = fields.Many2one("res.company", required=True)
     settlement_date = fields.Date(default=fields.Date.context_today, required=True)
     pricelist_id = fields.Many2one("product.pricelist", string="Pricelist", default=lambda self: self._default_pricelist())
+    journal_id = fields.Many2one(
+        "account.journal",
+        string="Invoicing Journal",
+        domain="[('type', '=', 'sale'), ('company_id', '=', company_id)]",
+        check_company=True,
+        default=lambda self: self._default_sale_journal(),
+    )
     currency_id = fields.Many2one(
         "res.currency",
         compute="_compute_currency_id",
@@ -48,6 +55,12 @@ class ThaConsignmentSettlement(models.Model):
     effective_date = fields.Datetime(string="Effective Date", compute="_compute_effective_date")
     invoice_id = fields.Many2one("account.move", string="Customer Invoice", copy=False, readonly=True)
     commission_bill_id = fields.Many2one("account.move", string="Commission Bill", copy=False, readonly=True)
+    invoice_status = fields.Selection(
+        [("invoiced", "Fully Invoiced"), ("to invoice", "To Invoice"), ("no", "Nothing to Invoice")],
+        string="Invoice Status",
+        compute="_compute_invoice_status",
+        store=True,
+    )
     invoice_count = fields.Integer(compute="_compute_document_counts")
     commission_bill_count = fields.Integer(compute="_compute_document_counts")
     amount_total = fields.Monetary(compute="_compute_amounts", store=True)
@@ -70,6 +83,16 @@ class ThaConsignmentSettlement(models.Model):
     def _compute_effective_date(self):
         for settlement in self:
             settlement.effective_date = settlement.picking_id.date_done
+
+    @api.depends("state", "invoice_id.state")
+    def _compute_invoice_status(self):
+        for settlement in self:
+            if settlement.state != "confirmed":
+                settlement.invoice_status = "no"
+            elif settlement.invoice_id and settlement.invoice_id.state != "cancel":
+                settlement.invoice_status = "invoiced"
+            else:
+                settlement.invoice_status = "to invoice"
 
     @api.depends("invoice_id", "commission_bill_id")
     def _compute_document_counts(self):
@@ -119,6 +142,13 @@ class ThaConsignmentSettlement(models.Model):
         pricelist = pricelist or self._default_pricelist(company=company)
         return pricelist.currency_id or company.currency_id
 
+    def _default_sale_journal(self, company=False):
+        company = company or self.env.company
+        return self.env["account.journal"].search([
+            ("type", "=", "sale"),
+            ("company_id", "=", company.id),
+        ], order="sequence, id", limit=1)
+
     @api.onchange("order_id")
     def _onchange_order_id(self):
         for settlement in self:
@@ -130,6 +160,7 @@ class ThaConsignmentSettlement(models.Model):
             settlement.partner_invoice_id = invoice_partner
             settlement.company_id = order.company_id
             settlement.pricelist_id = order.pricelist_id
+            settlement.journal_id = settlement._default_sale_journal(company=order.company_id)
             settlement.commission_rate = order.commission_rate
             settlement.user_id = order.user_id
             settlement.team_id = order.team_id
@@ -324,6 +355,7 @@ class ThaConsignmentSettlement(models.Model):
             "fiscal_position_id": self.fiscal_position_id.id,
             "company_id": self.company_id.id,
             "currency_id": self.currency_id.id,
+            "journal_id": self.journal_id.id,
             "team_id": self.team_id.id,
             "invoice_user_id": self.user_id.id,
             "user_id": self.user_id.id,

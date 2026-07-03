@@ -12,8 +12,8 @@
                 <field name="date_order"/>
                 <field name="commitment_date" optional="show"/>
                 <field name="partner_id"/>
-                <field name="user_id" widget="many2one_avatar_user" optional="show"/>
-                <field name="team_id" optional="show"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="hide"/>
+                <field name="team_id" optional="hide"/>
                 <field name="amount_total"/>
                 <field name="transfer_state" widget="badge"
                     decoration-info="transfer_state == 'assigned'"
@@ -87,7 +87,7 @@
                                     <field name="allowed_uom_ids" column_invisible="1"/>
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id" required="not display_type"/>
-                                    <field name="name" widget="section_and_note_text"/>
+                                    <field name="name" widget="section_and_note_text" invisible="not display_type"/>
                                     <field name="product_uom_qty" invisible="display_type"/>
                                     <field name="qty_delivered" readonly="1" invisible="display_type"/>
                                     <field name="qty_invoiced" readonly="1" invisible="display_type"/>
@@ -95,7 +95,6 @@
                                     <field name="qty_settled" readonly="1" invisible="display_type"/>
                                     <field name="product_uom_id" widget="many2one_uom" required="not display_type" invisible="display_type"/>
                                     <field name="consignment_price_unit" invisible="display_type"/>
-                                    <field name="consignment_discount" invisible="display_type"/>
                                     <field name="consignment_subtotal" readonly="1" invisible="display_type"/>
                                 </list>
                             </field>
@@ -119,7 +118,6 @@
                                         decoration-warning="transfer_state in ('waiting', 'confirmed', 'partially_done')"
                                         decoration-danger="transfer_state == 'cancel'"/>
                                 </group>
-                                <group string="Tracking"/>
                             </group>
                         </page>
                     </notebook>
