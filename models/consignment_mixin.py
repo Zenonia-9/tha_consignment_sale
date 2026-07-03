@@ -93,14 +93,34 @@ class ThaConsignmentMixin(models.AbstractModel):
         company = company or self.env.company
         PickingType = self.env["stock.picking.type"].sudo().with_company(company)
         sequence = self._company_sequence_from_template(sequence_xmlid, company)
-        picking_type = PickingType.search([
+        picking_types = PickingType.search([
             ("company_id", "=", company.id),
-            ("tha_consignment_flow", "=", flow),
             ("active", "=", True),
-        ], limit=1)
+            "|",
+            ("tha_consignment_flow", "=", flow),
+            "|",
+            ("sequence_code", "=", sequence_code),
+            ("name", "=", name),
+        ])
+        picking_type = picking_types.sorted(
+            key=lambda current_type: (
+                current_type.tha_consignment_flow == flow,
+                current_type.sequence_code == sequence_code,
+                bool(current_type.sequence_id),
+                current_type.id,
+            ),
+            reverse=True,
+        )[:1]
         if picking_type:
+            vals = {}
+            if picking_type.tha_consignment_flow != flow:
+                vals["tha_consignment_flow"] = flow
+            if picking_type.sequence_code != sequence_code:
+                vals["sequence_code"] = sequence_code
             if picking_type.sequence_id.company_id != company or picking_type.sequence_id == self.env.ref(sequence_xmlid, raise_if_not_found=False):
-                picking_type.sequence_id = sequence
+                vals["sequence_id"] = sequence.id
+            if vals:
+                picking_type.write(vals)
             return picking_type
         return PickingType.create({
             "name": name,
