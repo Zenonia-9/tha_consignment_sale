@@ -236,17 +236,9 @@ class ThaConsignmentSettlementLine(models.Model):
     available_product_ids = fields.Many2many("product.product", compute="_compute_available_product_ids")
     product_id = fields.Many2one(
         "product.product",
-        string="Product Variant",
+        string="Product",
         domain='[("id", "in", available_product_ids)]',
         required=True,
-    )
-    product_template_id = fields.Many2one(
-        "product.template",
-        string="Product",
-        compute="_compute_product_template_id",
-        readonly=False,
-        search="_search_product_template_id",
-        domain=lambda self: self._fields["product_id"]._description_domain(self.env),
     )
     name = fields.Char(string="Description")
     product_uom_id = fields.Many2one(
@@ -289,15 +281,6 @@ class ThaConsignmentSettlementLine(models.Model):
             line.allowed_uom_ids = line.product_id.uom_id | line.product_id.uom_ids
 
     @api.depends("available_qty", "sold_qty", "product_id", "product_uom_id")
-    @api.depends("product_id")
-    def _compute_product_template_id(self):
-        for line in self:
-            line.product_template_id = line.product_id.product_tmpl_id
-
-    def _search_product_template_id(self, operator, value):
-        return [("product_id.product_tmpl_id", operator, value)]
-
-    @api.depends("available_qty", "sold_qty", "product_id", "product_uom_id")
     def _compute_availability_state(self):
         for line in self:
             line.availability_state = "available" if line._has_available_quantity() else "not_available"
@@ -319,13 +302,6 @@ class ThaConsignmentSettlementLine(models.Model):
         self.name = self.product_id.display_name
         self.product_uom_id = self.product_id.uom_id
         self._onchange_price_inputs()
-
-    @api.onchange("product_template_id")
-    def _onchange_product_template_id(self):
-        if not self.product_template_id:
-            return
-        if self.product_id.product_tmpl_id != self.product_template_id:
-            self.product_id = self.product_template_id.product_variant_id
 
     @api.onchange("sold_qty", "product_uom_id", "product_id")
     def _onchange_price_inputs(self):

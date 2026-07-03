@@ -283,20 +283,7 @@ class ThaConsignmentOrderLine(models.Model):
     order_id = fields.Many2one("tha.consignment.order", required=True, ondelete="cascade")
     company_id = fields.Many2one(related="order_id.company_id", store=True)
     currency_id = fields.Many2one(related="order_id.currency_id", store=True)
-    product_id = fields.Many2one(
-        "product.product",
-        string="Product Variant",
-        domain=[("type", "=", "consu")],
-        required=True,
-    )
-    product_template_id = fields.Many2one(
-        "product.template",
-        string="Product",
-        compute="_compute_product_template_id",
-        readonly=False,
-        search="_search_product_template_id",
-        domain=lambda self: self._fields["product_id"]._description_domain(self.env),
-    )
+    product_id = fields.Many2one("product.product", string="Product", domain=[("type", "=", "consu")], required=True)
     name = fields.Char(string="Description")
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit", required=True)
     product_uom_id = fields.Many2one(
@@ -320,26 +307,11 @@ class ThaConsignmentOrderLine(models.Model):
     def _compute_allowed_uom_ids(self):
         for line in self:
             line.allowed_uom_ids = line.product_id.uom_id | line.product_id.uom_ids
-
-    @api.depends("product_id")
-    def _compute_product_template_id(self):
-        for line in self:
-            line.product_template_id = line.product_id.product_tmpl_id
-
-    def _search_product_template_id(self, operator, value):
-        return [("product_id.product_tmpl_id", operator, value)]
     @api.onchange("product_id")
     def _onchange_product_id(self):
         self.name = self.product_id.display_name
         self.product_uom_id = self.product_id.uom_id
         self._onchange_price_inputs()
-
-    @api.onchange("product_template_id")
-    def _onchange_product_template_id(self):
-        if not self.product_template_id:
-            return
-        if self.product_id.product_tmpl_id != self.product_template_id:
-            self.product_id = self.product_template_id.product_variant_id
 
     @api.onchange("product_uom_qty", "product_uom_id", "product_id")
     def _onchange_price_inputs(self):
