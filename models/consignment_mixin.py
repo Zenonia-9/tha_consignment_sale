@@ -52,6 +52,31 @@ class ThaConsignmentMixin(models.AbstractModel):
 
         return seq.next_by_id(sequence_date=sequence_date) if seq else False
 
+    def _company_sequence_from_template(self, sequence_xmlid, company, code=False):
+        """Return a company-safe sequence copied from the XMLID template when needed."""
+        company = company or self.env.company
+        Sequence = self.env["ir.sequence"].sudo().with_company(company)
+        template = self.env.ref(sequence_xmlid, raise_if_not_found=False)
+        if not template:
+            return Sequence
+
+        domain = [("company_id", "=", company.id)]
+        if code:
+            domain.append(("code", "=", code))
+        else:
+            domain.append(("name", "=", template.name))
+
+        seq = Sequence.search(domain, limit=1)
+        if not seq:
+            copy_vals = {
+                "name": "%s (%s)" % (template.name, company.name),
+                "company_id": company.id,
+            }
+            if code:
+                copy_vals["code"] = code
+            seq = template.copy(copy_vals)
+        return seq
+
     def _check_unique_consignment_name(self):
         for record in self:
             if not record.name or record.name in ("New", _("New")):
@@ -67,18 +92,21 @@ class ThaConsignmentMixin(models.AbstractModel):
     def _consignment_picking_type(self, flow, name, code, sequence_code, sequence_xmlid, source_location, destination_location, company=False):
         company = company or self.env.company
         PickingType = self.env["stock.picking.type"].sudo().with_company(company)
+        sequence = self._company_sequence_from_template(sequence_xmlid, company)
         picking_type = PickingType.search([
             ("company_id", "=", company.id),
             ("tha_consignment_flow", "=", flow),
             ("active", "=", True),
         ], limit=1)
         if picking_type:
+            if picking_type.sequence_id.company_id != company or picking_type.sequence_id == self.env.ref(sequence_xmlid, raise_if_not_found=False):
+                picking_type.sequence_id = sequence
             return picking_type
         return PickingType.create({
             "name": name,
             "code": code,
             "sequence_code": sequence_code,
-            "sequence_id": self.env.ref(sequence_xmlid).id,
+            "sequence_id": sequence.id,
             "default_location_src_id": source_location.id,
             "default_location_dest_id": destination_location.id,
             "use_create_lots": False,

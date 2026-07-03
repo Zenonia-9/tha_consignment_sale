@@ -94,7 +94,6 @@
                                     <field name="available_qty" readonly="1" invisible="display_type"/>
                                     <field name="price_unit" invisible="display_type"/>
                                     <field name="discount" invisible="display_type"/>
-                                    <field name="commission_rate" invisible="display_type"/>
                                     <field name="subtotal" readonly="1" invisible="display_type"/>
                                 </list>
                             </field>

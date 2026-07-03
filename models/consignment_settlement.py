@@ -408,7 +408,7 @@ class ThaConsignmentSettlementLine(models.Model):
                 strict=False,
             )
 
-    @api.depends("product_uom_qty", "price_unit", "discount", "commission_rate", "display_type")
+    @api.depends("product_uom_qty", "price_unit", "discount", "settlement_id.commission_rate", "display_type")
     def _compute_amounts(self):
         for line in self:
             if line.display_type:
@@ -417,7 +417,7 @@ class ThaConsignmentSettlementLine(models.Model):
                 line.net_amount = 0.0
                 continue
             line.subtotal = line.product_uom_qty * line.price_unit * (1 - (line.discount or 0.0) / 100.0)
-            line.commission_amount = line.subtotal * (line.commission_rate or 0.0) / 100.0
+            line.commission_amount = line.subtotal * (line.settlement_id.commission_rate or 0.0) / 100.0
             line.net_amount = line.subtotal - line.commission_amount
 
     @api.onchange("order_line_id")
@@ -429,8 +429,6 @@ class ThaConsignmentSettlementLine(models.Model):
         self.product_uom_id = self.order_line_id.product_uom_id
         self.price_unit = self.order_line_id.consignment_price_unit
         self.discount = self.order_line_id.consignment_discount
-        self.commission_rate = self.order_line_id.commission_rate
-
     @api.onchange("product_id")
     def _onchange_product_id(self):
         if self.display_type:
@@ -462,7 +460,6 @@ class ThaConsignmentSettlementLine(models.Model):
                     "product_uom_qty": 0.0,
                     "price_unit": 0.0,
                     "discount": 0.0,
-                    "commission_rate": 0.0,
                 })
         return super().create(vals_list)
 
@@ -471,7 +468,7 @@ class ThaConsignmentSettlementLine(models.Model):
             raise UserError(_("You cannot change the type of a settlement line. Delete it and create a new one instead."))
         return super().write(vals)
 
-    @api.constrains("display_type", "product_id", "product_uom_id", "product_uom_qty", "discount", "commission_rate")
+    @api.constrains("display_type", "product_id", "product_uom_id", "product_uom_qty", "discount")
     def _check_values(self):
         for line in self:
             if not line.name:
@@ -485,8 +482,6 @@ class ThaConsignmentSettlementLine(models.Model):
             line._check_positive_quantity()
             if not 0 <= line.discount <= 100:
                 raise ValidationError(_("Discount must be between 0 and 100."))
-            if line.commission_rate < 0:
-                raise ValidationError(_("Commission cannot be negative."))
 
     def _check_positive_quantity(self):
         if self.product_uom_qty <= 0:

@@ -582,8 +582,8 @@ class ThaConsignmentOrderLine(models.Model):
                 and settlement_line.settlement_id.invoice_id.state != "cancel"
             )
 
-            line.qty_delivered = sum(line._convert_move_qty(move, move.quantity_done) for move in delivered_moves)
-            line.qty_returned = sum(line._convert_move_qty(move, move.quantity_done) for move in returned_moves)
+            line.qty_delivered = sum(line._convert_move_qty(move, move.quantity) for move in delivered_moves)
+            line.qty_returned = sum(line._convert_move_qty(move, move.quantity) for move in returned_moves)
             line.qty_settled = sum(
                 settlement_line.product_uom_id._compute_quantity(
                     settlement_line.product_uom_qty,

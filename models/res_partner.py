@@ -5,7 +5,7 @@ from odoo.exceptions import ValidationError
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    is_consignment_shop = fields.Boolean(string="Is Consignment Shop")
+    is_consignment_shop = fields.Boolean(string="Is Consignment Partner")
     consignment_location_id = fields.Many2one(
         "stock.location",
         string="Consignment Location",
