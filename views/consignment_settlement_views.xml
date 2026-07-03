@@ -25,7 +25,7 @@
                     decoration-success="delivery_status == 'done'"
                     decoration-warning="delivery_status in ('waiting', 'confirmed')"
                     decoration-danger="delivery_status == 'cancel'"/>
-                <field name="invoice_status" widget="badge" optional="show"
+                <field name="invoice_status" widget="badge" optional="hide"
                     decoration-success="invoice_status == 'invoiced'"
                     decoration-info="invoice_status == 'to invoice'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
@@ -96,8 +96,9 @@
                                     <field name="display_type" force_save="1" column_invisible="True"/>
                                     <field name="allowed_uom_ids" column_invisible="1"/>
                                     <field name="sequence" widget="handle"/>
-                                    <field name="product_id" required="not display_type"/>
-                                    <field name="name" widget="section_and_note_text" invisible="not display_type"/>
+                                    <field name="product_id" string="Product Variant" required="not display_type" optional="hide"/>
+                                    <field name="product_template_id" string="Product" required="not display_type" optional="show" placeholder="Type to find a product..."/>
+                                    <field name="name" string="Description" widget="section_and_note_text" optional="show"/>
                                     <field name="product_uom_qty" invisible="display_type"/>
                                     <field name="product_uom_id" widget="many2one_uom" required="not display_type" invisible="display_type"/>
                                     <field name="price_unit" invisible="display_type"/>

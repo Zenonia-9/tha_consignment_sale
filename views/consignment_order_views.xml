@@ -86,8 +86,9 @@
                                     <field name="display_type" force_save="1" column_invisible="True"/>
                                     <field name="allowed_uom_ids" column_invisible="1"/>
                                     <field name="sequence" widget="handle"/>
-                                    <field name="product_id" required="not display_type"/>
-                                    <field name="name" widget="section_and_note_text" invisible="not display_type"/>
+                                    <field name="product_id" string="Product Variant" required="not display_type" optional="hide"/>
+                                    <field name="product_template_id" string="Product" required="not display_type" optional="show" placeholder="Type to find a product..."/>
+                                    <field name="name" string="Description" widget="section_and_note_text" optional="show"/>
                                     <field name="product_uom_qty" invisible="display_type"/>
                                     <field name="qty_delivered" readonly="1" invisible="display_type"/>
                                     <field name="qty_invoiced" readonly="1" invisible="display_type"/>
