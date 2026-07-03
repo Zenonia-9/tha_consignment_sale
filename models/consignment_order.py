@@ -11,7 +11,11 @@ class ThaConsignmentOrder(models.Model):
 
     name = fields.Char(default=lambda self: _("New"), copy=False, readonly=True, index=True)
     date_order = fields.Date(string="Order Date", default=fields.Date.context_today, required=True)
-    commitment_date = fields.Date(string="Delivery Date")
+    commitment_date = fields.Date(
+        string="Delivery Date",
+        compute="_compute_commitment_date",
+        readonly=True,
+    )
     partner_id = fields.Many2one(
         "res.partner",
         string="Customer",
@@ -115,6 +119,15 @@ class ThaConsignmentOrder(models.Model):
     def _compute_currency_id(self):
         for order in self:
             order.currency_id = order.pricelist_id.currency_id or order.company_id.currency_id
+
+    @api.depends("picking_ids.state", "picking_ids.date_done")
+    def _compute_commitment_date(self):
+        for order in self:
+            done_deliveries = order.picking_ids.filtered(lambda picking: not picking.return_id and picking.state == "done")
+            if done_deliveries:
+                order.commitment_date = max(done_deliveries.mapped("date_done")).date()
+            else:
+                order.commitment_date = False
 
     @api.depends("line_ids.consignment_subtotal", "line_ids.display_type", "commission_rate")
     def _compute_amounts(self):

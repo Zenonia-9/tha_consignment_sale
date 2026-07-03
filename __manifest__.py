@@ -31,6 +31,7 @@ Installation
         "wizard/consignment_settlement_create_wizard_views.xml",
         "views/res_partner_views.xml",
         "views/stock_warehouse_views.xml",
+        "views/account_move_views.xml",
         "views/consignment_order_views.xml",
         "views/consignment_settlement_views.xml",
         "views/stock_picking_views.xml",

@@ -39,7 +39,7 @@ class ThaConsignmentSettlementCreateWizard(models.TransientModel):
             }))
         res.update({
             "order_id": order.id,
-            "settlement_date": fields.Date.context_today(self),
+            "settlement_date": order.commitment_date or fields.Date.context_today(self),
             "commission_rate": order.commission_rate,
             "line_ids": line_commands,
         })
@@ -47,18 +47,31 @@ class ThaConsignmentSettlementCreateWizard(models.TransientModel):
 
     def action_create_draft(self):
         self.ensure_one()
+        source_lines = self.order_id.line_ids.filtered(
+            lambda order_line: not order_line.display_type and order_line.remaining_qty > 0
+        ).sorted(lambda order_line: (order_line.sequence, order_line.id))
+        wizard_lines = self.line_ids.sorted(lambda wizard_line: (wizard_line.sequence, wizard_line.id))
         lines_to_create = []
-        for line in self.line_ids.filtered(lambda wizard_line: wizard_line.order_line_id and wizard_line.quantity > 0):
-            line._check_quantity()
+        for index, line in enumerate(wizard_lines.filtered(lambda wizard_line: wizard_line.quantity > 0)):
+            order_line = line.order_line_id
+            if not order_line and index < len(source_lines):
+                order_line = source_lines[index]
+            if not order_line:
+                continue
+            remaining_qty = line.remaining_qty or order_line.remaining_qty
+            if line.quantity < 0:
+                raise UserError(_("Settlement quantity cannot be negative."))
+            if line.quantity > remaining_qty:
+                raise UserError(_("Settlement quantity cannot exceed remaining quantity for %s.") % order_line.product_id.display_name)
             lines_to_create.append(Command.create({
                 "sequence": line.sequence,
-                "order_line_id": line.order_line_id.id,
-                "product_id": line.product_id.id,
-                "name": line.name,
+                "order_line_id": order_line.id,
+                "product_id": line.product_id.id or order_line.product_id.id,
+                "name": line.name or order_line.name,
                 "product_uom_qty": line.quantity,
-                "product_uom_id": line.product_uom_id.id,
-                "price_unit": line.price_unit,
-                "discount": line.discount,
+                "product_uom_id": line.product_uom_id.id or order_line.product_uom_id.id,
+                "price_unit": line.price_unit or order_line.consignment_price_unit,
+                "discount": line.discount or order_line.consignment_discount,
             }))
         if not lines_to_create:
             raise UserError(_("Set at least one quantity greater than zero."))

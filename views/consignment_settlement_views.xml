@@ -30,8 +30,8 @@
             <form string="Consignment Settlement">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm Settlement" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-secondary" invisible="state != 'confirmed'"/>
-                    <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-secondary" invisible="state != 'confirmed' or commission_amount == 0"/>
+                    <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-primary" invisible="state != 'confirmed' or invoice_id"/>
+                    <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-primary" invisible="state != 'confirmed' or commission_amount == 0 or commission_bill_id"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
@@ -91,7 +91,6 @@
                                     <field name="name" widget="section_and_note_text"/>
                                     <field name="product_uom_qty" invisible="display_type"/>
                                     <field name="product_uom_id" widget="many2one_uom" required="not display_type" invisible="display_type"/>
-                                    <field name="available_qty" readonly="1" invisible="display_type"/>
                                     <field name="price_unit" invisible="display_type"/>
                                     <field name="discount" invisible="display_type"/>
                                     <field name="subtotal" readonly="1" invisible="display_type"/>
