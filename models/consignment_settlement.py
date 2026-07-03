@@ -327,6 +327,7 @@ class ThaConsignmentSettlement(models.Model):
             "team_id": self.team_id.id,
             "invoice_user_id": self.user_id.id,
             "user_id": self.user_id.id,
+            "tha_consignment_settlement_id": self.id,
             "invoice_line_ids": invoice_lines,
         })
 
@@ -341,6 +342,7 @@ class ThaConsignmentSettlement(models.Model):
             "invoice_payment_term_id": self.payment_term_id.id,
             "company_id": self.company_id.id,
             "currency_id": self.currency_id.id,
+            "tha_consignment_settlement_id": self.id,
             "invoice_line_ids": [Command.create({
                 "product_id": product.product_variant_id.id,
                 "name": _("Consignment commission for %s") % self.name,

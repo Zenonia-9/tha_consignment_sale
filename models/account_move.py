@@ -7,23 +7,10 @@ class AccountMove(models.Model):
     tha_consignment_settlement_id = fields.Many2one(
         "tha.consignment.settlement",
         string="Consignment Settlement",
-        compute="_compute_tha_consignment_settlement_id",
+        readonly=True,
+        copy=False,
+        index=True,
     )
-
-    def _compute_tha_consignment_settlement_id(self):
-        settlement_by_invoice = {}
-        settlements = self.env["tha.consignment.settlement"].sudo().search([
-            "|",
-            ("invoice_id", "in", self.ids),
-            ("commission_bill_id", "in", self.ids),
-        ])
-        for settlement in settlements:
-            if settlement.invoice_id:
-                settlement_by_invoice[settlement.invoice_id.id] = settlement
-            if settlement.commission_bill_id:
-                settlement_by_invoice[settlement.commission_bill_id.id] = settlement
-        for move in self:
-            move.tha_consignment_settlement_id = settlement_by_invoice.get(move.id)
 
     def action_view_consignment_settlement(self):
         self.ensure_one()
