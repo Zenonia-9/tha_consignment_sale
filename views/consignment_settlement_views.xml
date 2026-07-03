@@ -25,7 +25,7 @@
                     decoration-success="delivery_status == 'done'"
                     decoration-warning="delivery_status in ('waiting', 'confirmed')"
                     decoration-danger="delivery_status == 'cancel'"/>
-                <field name="invoice_status" widget="badge" optional="show"
+                <field name="invoice_status" widget="badge" optional="hide"
                     decoration-success="invoice_status == 'invoiced'"
                     decoration-info="invoice_status == 'to invoice'"/>
                 <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"/>
