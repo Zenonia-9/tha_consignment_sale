@@ -15,13 +15,14 @@ class ThaConsignmentSettlement(models.Model):
     partner_invoice_id = fields.Many2one("res.partner", string="Invoice Address")
     company_id = fields.Many2one("res.company", required=True)
     settlement_date = fields.Date(default=fields.Date.context_today, required=True)
-    pricelist_id = fields.Many2one("product.pricelist", string="Pricelist")
+    pricelist_id = fields.Many2one("product.pricelist", string="Pricelist", default=lambda self: self._default_pricelist())
     currency_id = fields.Many2one(
         "res.currency",
         compute="_compute_currency_id",
         store=True,
         readonly=False,
         required=True,
+        default=lambda self: self._default_currency(),
     )
     commission_rate = fields.Float(string="Commission %", default=0.0)
     user_id = fields.Many2one("res.users", string="Salesperson", check_company=True)
@@ -82,11 +83,41 @@ class ThaConsignmentSettlement(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            company = self.env["res.company"].browse(vals.get("company_id")) if vals.get("company_id") else self.env.company
+            order = self.env["tha.consignment.order"].browse(vals.get("order_id")) if vals.get("order_id") else self.env["tha.consignment.order"]
+            partner = self.env["res.partner"].browse(vals.get("partner_id")) if vals.get("partner_id") else self.env["res.partner"]
+            pricelist = (
+                self.env["product.pricelist"].browse(vals["pricelist_id"])
+                if vals.get("pricelist_id")
+                else order.pricelist_id or partner.consignment_pricelist_id or self._default_pricelist(company=company)
+            )
+            if pricelist and not vals.get("pricelist_id"):
+                vals["pricelist_id"] = pricelist.id
+            if not vals.get("currency_id"):
+                vals["currency_id"] = (pricelist.currency_id or company.currency_id).id
         settlements = super().create(vals_list)
         for settlement in settlements:
             if not settlement.name or settlement.name in (_("New"), "New"):
                 settlement._assign_sequence()
         return settlements
+
+    def _default_pricelist(self, company=False, partner=False):
+        company = company or self.env.company
+        partner = partner or self.env["res.partner"]
+        return (
+            partner.consignment_pricelist_id
+            or self.env["product.pricelist"].search([
+                "|",
+                ("company_id", "=", False),
+                ("company_id", "=", company.id),
+            ], limit=1)
+        )
+
+    def _default_currency(self, company=False, pricelist=False):
+        company = company or self.env.company
+        pricelist = pricelist or self._default_pricelist(company=company)
+        return pricelist.currency_id or company.currency_id
 
     @api.onchange("order_id")
     def _onchange_order_id(self):
@@ -110,6 +141,11 @@ class ThaConsignmentSettlement(models.Model):
             )
             settlement.warehouse_id = order.destination_warehouse_id
             settlement.source_location_id = order.destination_location_id
+            settlement.currency_id = settlement.pricelist_id.currency_id or settlement.company_id.currency_id
+
+    @api.onchange("pricelist_id")
+    def _onchange_pricelist_id(self):
+        self.currency_id = self.pricelist_id.currency_id or self.company_id.currency_id
 
     def _assign_sequence(self):
         if not self.name or self.name in (_("New"), "New"):

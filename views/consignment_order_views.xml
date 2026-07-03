@@ -66,6 +66,7 @@
                             <field name="date_order" readonly="state != 'draft'"/>
                             <field name="commitment_date" readonly="state != 'draft'"/>
                             <field name="pricelist_id" readonly="state != 'draft'"/>
+                            <field name="currency_id" readonly="1"/>
                             <field name="commission_rate" readonly="state != 'draft'"/>
                             <field name="destination_warehouse_id" readonly="state != 'draft'"/>
                             <field name="destination_location_id" readonly="state != 'draft'"/>

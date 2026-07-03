@@ -77,6 +77,7 @@ class ThaConsignmentSettlementCreateWizard(models.TransientModel):
             "company_id": order.company_id.id,
             "settlement_date": self.settlement_date,
             "pricelist_id": order.pricelist_id.id,
+            "currency_id": order.currency_id.id,
             "commission_rate": order.commission_rate,
             "user_id": order.user_id.id,
             "team_id": order.team_id.id,

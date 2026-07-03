@@ -66,13 +66,14 @@ class ThaConsignmentOrder(models.Model):
         domain=[("usage", "=", "internal")],
         required=True,
     )
-    pricelist_id = fields.Many2one("product.pricelist", string="Pricelist")
+    pricelist_id = fields.Many2one("product.pricelist", string="Pricelist", default=lambda self: self._default_pricelist())
     currency_id = fields.Many2one(
         "res.currency",
         compute="_compute_currency_id",
         store=True,
         readonly=False,
         required=True,
+        default=lambda self: self._default_currency(),
     )
     commission_rate = fields.Float(string="Commission %", default=0.0)
     state = fields.Selection(
@@ -175,6 +176,18 @@ class ThaConsignmentOrder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            company = self.env["res.company"].browse(vals.get("company_id")) if vals.get("company_id") else self.env.company
+            partner = self.env["res.partner"].browse(vals.get("partner_id")) if vals.get("partner_id") else self.env["res.partner"]
+            pricelist = (
+                self.env["product.pricelist"].browse(vals["pricelist_id"])
+                if vals.get("pricelist_id")
+                else partner.consignment_pricelist_id or self._default_pricelist(company=company)
+            )
+            if pricelist and not vals.get("pricelist_id"):
+                vals["pricelist_id"] = pricelist.id
+            if not vals.get("currency_id"):
+                vals["currency_id"] = (pricelist.currency_id or company.currency_id).id
         orders = super().create(vals_list)
         for order in orders:
             if not order.name or order.name in (_("New"), "New"):
@@ -183,6 +196,23 @@ class ThaConsignmentOrder(models.Model):
 
     def _default_salesperson(self):
         return self.env.user
+
+    def _default_pricelist(self, company=False, partner=False):
+        company = company or self.env.company
+        partner = partner or self.env["res.partner"]
+        return (
+            partner.consignment_pricelist_id
+            or self.env["product.pricelist"].search([
+                "|",
+                ("company_id", "=", False),
+                ("company_id", "=", company.id),
+            ], limit=1)
+        )
+
+    def _default_currency(self, company=False, pricelist=False):
+        company = company or self.env.company
+        pricelist = pricelist or self._default_pricelist(company=company)
+        return pricelist.currency_id or company.currency_id
 
     def _default_sales_team(self, user=False, company=False):
         user = user or self.env.user
@@ -225,7 +255,11 @@ class ThaConsignmentOrder(models.Model):
     @api.onchange("partner_id")
     def _onchange_partner_id(self):
         self.destination_location_id = self.partner_id.consignment_location_id
-        self.pricelist_id = self.partner_id.consignment_pricelist_id
+        self.pricelist_id = self.partner_id.consignment_pricelist_id or self.pricelist_id or self._default_pricelist(
+            company=self.company_id,
+            partner=self.partner_id,
+        )
+        self.currency_id = self.pricelist_id.currency_id or self.company_id.currency_id
         self.commission_rate = self.partner_id.commission_rate
         self.destination_warehouse_id = (
             self._warehouse_for_location(self.destination_location_id, self.company_id) or self.destination_warehouse_id
@@ -234,6 +268,10 @@ class ThaConsignmentOrder(models.Model):
         self.team_id = self._default_sales_team(user=self.user_id, company=self.company_id)
         for line in self.line_ids.filtered(lambda current_line: not current_line.display_type):
             line._onchange_price_inputs()
+
+    @api.onchange("pricelist_id")
+    def _onchange_pricelist_id(self):
+        self.currency_id = self.pricelist_id.currency_id or self.company_id.currency_id
 
     def action_confirm(self):
         for order in self:
