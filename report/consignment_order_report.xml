@@ -25,16 +25,8 @@
     <template id="consignment_order_report_body">
         <t t-set="lines" t-value="o.line_ids.filtered(lambda line: not line.display_type)"/>
         <t t-set="address_parts" t-value="[part for part in [o.partner_id.street, o.partner_id.street2, o.partner_id.city, o.partner_id.state_id.name if o.partner_id.state_id else False, o.partner_id.country_id.name if o.partner_id.country_id else False] if part]"/>
-        <t t-set="header_attachment" t-value="o.env.ref('tha_consignment_sale.attachment_ytk_consignment_header', raise_if_not_found=False)"/>
-
-        <div class="page" t-att-style="'position: relative; font-size: %s; height: %s; min-height: %s; padding-bottom: 0; overflow: hidden;' % (font_size, page_height, page_height)">
-            <t t-if="header_attachment and header_attachment.datas">
-                <img t-att-src="image_data_uri(header_attachment.datas)"
-                     style="position:absolute; top:0; left:0; width:100%; height:auto; z-index:0;"
-                     alt="YTK Header"/>
-            </t>
-
-            <div t-att-style="'position: relative; z-index: 1; padding-top: %s;' % top_padding">
+        <div class="page" t-att-style="'position: relative; font-size: %s; min-height: %s; padding-top: %s; padding-bottom: %s; box-sizing: border-box; color: #111;' % (font_size, page_height, top_padding, bottom_padding)">
+            <div style="position: relative; z-index: 1;">
                 <div style="margin-bottom: 18px;">
                     <h3 style="margin: 0; font-weight: bold;">Consignment Order</h3>
                 </div>
@@ -154,13 +146,7 @@
                         <td style="width:25%; vertical-align:top; border:1px solid #000; padding:6px 8px 10px 8px;">
                             <strong>Sales Person</strong>
                             <div style="margin-top:30px;">Sign ........................................</div>
-                            <div style="margin-top:10px;">
-                                Name
-                                <t t-if="o.user_id">
-                                    <span t-esc="' %s' % o.user_id.name"/>
-                                </t>
-                                <t t-else=""> ........................................</t>
-                            </div>
+                            <div style="margin-top:10px;">Name ........................................</div>
                         </td>
                         <td style="width:25%; vertical-align:top; border:1px solid #000; padding:6px 8px 10px 8px;">
                             <strong>Checked By</strong>
@@ -192,12 +178,14 @@
     <template id="report_consignment_order_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-                <t t-call="web.basic_layout">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+                <t t-call="tha_consignment_sale.consignment_order_layout_a4">
                     <t t-call="tha_consignment_sale.consignment_order_report_body">
                         <t t-set="font_size" t-value="'13px'"/>
-                        <t t-set="top_padding" t-value="'132px'"/>
-                        <t t-set="page_height" t-value="'276mm'"/>
-                        <t t-set="sign_bottom" t-value="'18mm'"/>
+                        <t t-set="top_padding" t-value="'6mm'"/>
+                        <t t-set="bottom_padding" t-value="'74mm'"/>
+                        <t t-set="page_height" t-value="'248mm'"/>
+                        <t t-set="sign_bottom" t-value="'16mm'"/>
                     </t>
                 </t>
             </t>
@@ -207,12 +195,14 @@
     <template id="report_consignment_order_document_a5">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-                <t t-call="web.basic_layout">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+                <t t-call="tha_consignment_sale.consignment_order_layout_a5">
                     <t t-call="tha_consignment_sale.consignment_order_report_body">
                         <t t-set="font_size" t-value="'8.5px'"/>
-                        <t t-set="top_padding" t-value="'96px'"/>
-                        <t t-set="page_height" t-value="'186mm'"/>
-                        <t t-set="sign_bottom" t-value="'16mm'"/>
+                        <t t-set="top_padding" t-value="'4mm'"/>
+                        <t t-set="bottom_padding" t-value="'58mm'"/>
+                        <t t-set="page_height" t-value="'172mm'"/>
+                        <t t-set="sign_bottom" t-value="'14mm'"/>
                     </t>
                 </t>
             </t>
