@@ -528,9 +528,9 @@ class ThaConsignmentSettlementLine(models.Model):
     @api.constrains("display_type", "product_id", "product_uom_id", "product_uom_qty", "discount")
     def _check_values(self):
         for line in self:
-            if not line.name:
-                raise ValidationError(_("Description is required on settlement lines."))
             if line.display_type:
+                if not line.name:
+                    raise ValidationError(_("Description is required on settlement section and note lines."))
                 if line.product_id or line.product_uom_id:
                     raise ValidationError(_("Section and note lines cannot have a product or unit."))
                 continue
