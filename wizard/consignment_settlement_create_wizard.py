@@ -141,9 +141,34 @@ class StockReturnPicking(models.TransientModel):
 
     def _prepare_picking_default_values(self):
         vals = super()._prepare_picking_default_values()
+        if self.picking_id.tha_is_consignment_transfer:
+            company = self.picking_id.company_id
+            consignment_helper = self.env["tha.consignment.order"].with_company(company)
+            return_picking_type = consignment_helper._consignment_picking_type(
+                "return",
+                _("Consignment Return"),
+                "internal",
+                "CONRET",
+                "tha_consignment_sale.seq_picking_consignment_return",
+                self.picking_id.location_dest_id,
+                self.picking_id.location_id,
+                company,
+            )
+            if self.picking_id.picking_type_id.return_picking_type_id != return_picking_type:
+                self.picking_id.picking_type_id.sudo().write({"return_picking_type_id": return_picking_type.id})
+            vals.update({
+                "name": "/",
+                "picking_type_id": return_picking_type.id,
+                "location_id": self.picking_id.location_dest_id.id,
+                "location_dest_id": self.picking_id.location_id.id,
+                "tha_is_consignment_transfer": True,
+            })
         if self.picking_id.tha_consignment_order_id:
             vals.update({
-                "tha_is_consignment_transfer": True,
                 "tha_consignment_order_id": self.picking_id.tha_consignment_order_id.id,
+            })
+        if self.picking_id.tha_consignment_settlement_id:
+            vals.update({
+                "tha_consignment_settlement_id": self.picking_id.tha_consignment_settlement_id.id,
             })
         return vals

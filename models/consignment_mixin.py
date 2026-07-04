@@ -93,18 +93,30 @@ class ThaConsignmentMixin(models.AbstractModel):
         company = company or self.env.company
         PickingType = self.env["stock.picking.type"].sudo().with_company(company)
         sequence = self._company_sequence_from_template(sequence_xmlid, company)
-        picking_types = PickingType.search([
+        supported_flows = {key for key, _label in PickingType._fields["tha_consignment_flow"].selection}
+        flow_supported = flow in supported_flows
+        domain = [
             ("company_id", "=", company.id),
             ("active", "=", True),
-            "|",
-            ("tha_consignment_flow", "=", flow),
-            "|",
-            ("sequence_code", "=", sequence_code),
-            ("name", "=", name),
-        ])
+        ]
+        if flow_supported:
+            domain += [
+                "|",
+                ("tha_consignment_flow", "=", flow),
+                "|",
+                ("sequence_code", "=", sequence_code),
+                ("name", "=", name),
+            ]
+        else:
+            domain += [
+                "|",
+                ("sequence_code", "=", sequence_code),
+                ("name", "=", name),
+            ]
+        picking_types = PickingType.search(domain)
         picking_type = picking_types.sorted(
             key=lambda current_type: (
-                current_type.tha_consignment_flow == flow,
+                flow_supported and current_type.tha_consignment_flow == flow,
                 current_type.sequence_code == sequence_code,
                 bool(current_type.sequence_id),
                 current_type.id,
@@ -113,7 +125,7 @@ class ThaConsignmentMixin(models.AbstractModel):
         )[:1]
         if picking_type:
             vals = {}
-            if picking_type.tha_consignment_flow != flow:
+            if flow_supported and picking_type.tha_consignment_flow != flow:
                 vals["tha_consignment_flow"] = flow
             if picking_type.sequence_code != sequence_code:
                 vals["sequence_code"] = sequence_code
@@ -122,7 +134,7 @@ class ThaConsignmentMixin(models.AbstractModel):
             if vals:
                 picking_type.write(vals)
             return picking_type
-        return PickingType.create({
+        create_vals = {
             "name": name,
             "code": code,
             "sequence_code": sequence_code,
@@ -132,8 +144,10 @@ class ThaConsignmentMixin(models.AbstractModel):
             "use_create_lots": False,
             "use_existing_lots": True,
             "company_id": company.id,
-            "tha_consignment_flow": flow,
-        })
+        }
+        if flow_supported:
+            create_vals["tha_consignment_flow"] = flow
+        return PickingType.create(create_vals)
 
     def _price_from_pricelist(self, pricelist, product, quantity, uom=False, date=False):
         if not product:
