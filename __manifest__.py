@@ -27,6 +27,7 @@ Installation
         "security/ir.model.access.csv",
         "security/consignment_security.xml",
         "data/consignment_data.xml",
+        "data/report_attachment.xml",
         "wizard/consignment_order_print_wizard_views.xml",
         "wizard/consignment_settlement_create_wizard_views.xml",
         "views/res_partner_views.xml",

@@ -2,7 +2,6 @@
 <odoo>
     <template id="consignment_order_layout_a4">
         <t t-if="not o" t-set="o" t-value="doc"/>
-
         <t t-if="not company">
             <t t-if="company_id">
                 <t t-set="company" t-value="company_id"/>
@@ -14,80 +13,14 @@
                 <t t-set="company" t-value="res_company"/>
             </t>
         </t>
+        <t t-set="header_attachment" t-value="o.env.ref('tha_consignment_sale.attachment_ytk_consignment_header', raise_if_not_found=False)"/>
 
         <div t-attf-class="header o_company_#{company.id}_layout">
-            <style>
-                .consignment-order-header {
-                    width: 100%;
-                    overflow: hidden;
-                }
-
-                .consignment-order-logo-block {
-                    float: left;
-                    width: 45%;
-                    text-align: left;
-                }
-
-                .consignment-order-address-block {
-                    float: right;
-                    width: 55%;
-                    text-align: right;
-                    font-size: 12px;
-                    line-height: 1.25;
-                    white-space: nowrap;
-                    padding-right: 6mm;
-                    vertical-align: middle;
-                }
-
-                .consignment-order-address-block div,
-                .consignment-order-address-block span {
-                    white-space: nowrap !important;
-                }
-
-                .consignment-order-logo {
-                    max-height: 80px;
-                    vertical-align: top;
-                }
-
-                .consignment-order-clear {
-                    clear: both;
-                }
-            </style>
-
-            <t t-set="partner" t-value="company.partner_id"/>
-
-            <div class="consignment-order-header">
-                <div class="consignment-order-logo-block">
-                    <img t-if="company.logo"
-                         class="consignment-order-logo"
-                         t-att-src="image_data_uri(company.logo)"
-                         alt="Logo"/>
-                </div>
-
-                <div class="consignment-order-address-block">
-                    <div t-if="company.name">
-                        <span t-esc="company.name"/>
-                    </div>
-                    <div t-if="partner.street">
-                        <span t-esc="partner.street"/>
-                    </div>
-                    <div t-if="partner.street2">
-                        <span t-esc="partner.street2"/>
-                    </div>
-                    <div t-if="partner.city or partner.state_id">
-                        <span t-if="partner.city" t-esc="partner.city"/>
-                        <span t-if="partner.city and partner.state_id"> </span>
-                        <span t-if="partner.state_id" t-esc="partner.state_id.name"/>
-                    </div>
-                    <div t-if="partner.zip">
-                        <span t-esc="partner.zip"/>
-                    </div>
-                    <div t-if="partner.country_id">
-                        <span t-esc="partner.country_id.name"/>
-                    </div>
-                </div>
-
-                <div class="consignment-order-clear"/>
+            <div class="ytk-consignment-header">
+                <img t-if="header_attachment and header_attachment.datas"
+                     t-att-src="image_data_uri(header_attachment.datas)"
+                     style="width: 100%; height: auto; display: block;"
+                     alt="YTK Header"/>
             </div>
         </div>
 
@@ -104,103 +37,8 @@
     </template>
 
     <template id="consignment_order_layout_a5">
-        <t t-if="not o" t-set="o" t-value="doc"/>
-
-        <t t-if="not company">
-            <t t-if="company_id">
-                <t t-set="company" t-value="company_id"/>
-            </t>
-            <t t-elif="o and 'company_id' in o and o.company_id.sudo()">
-                <t t-set="company" t-value="o.company_id.sudo()"/>
-            </t>
-            <t t-else="">
-                <t t-set="company" t-value="res_company"/>
-            </t>
-        </t>
-
-        <div t-attf-class="header o_company_#{company.id}_layout">
-            <style>
-                .consignment-order-header {
-                    width: 100%;
-                    overflow: hidden;
-                }
-
-                .consignment-order-logo-block {
-                    float: left;
-                    width: 45%;
-                    text-align: left;
-                }
-
-                .consignment-order-address-block {
-                    float: right;
-                    width: 55%;
-                    text-align: right;
-                    font-size: 11px;
-                    line-height: 1.25;
-                    white-space: nowrap;
-                    padding-right: 6mm;
-                }
-
-                .consignment-order-address-block div,
-                .consignment-order-address-block span {
-                    white-space: nowrap !important;
-                }
-
-                .consignment-order-logo {
-                    max-height: 65px;
-                }
-
-                .consignment-order-clear {
-                    clear: both;
-                }
-            </style>
-
-            <t t-set="partner" t-value="company.partner_id"/>
-
-            <div class="consignment-order-header">
-                <div class="consignment-order-logo-block">
-                    <img t-if="company.logo"
-                         class="consignment-order-logo"
-                         t-att-src="image_data_uri(company.logo)"
-                         alt="Logo"/>
-                </div>
-
-                <div class="consignment-order-address-block">
-                    <div t-if="company.name">
-                        <span t-esc="company.name"/>
-                    </div>
-                    <div t-if="partner.street">
-                        <span t-esc="partner.street"/>
-                    </div>
-                    <div t-if="partner.street2">
-                        <span t-esc="partner.street2"/>
-                    </div>
-                    <div t-if="partner.city or partner.state_id">
-                        <span t-if="partner.city" t-esc="partner.city"/>
-                        <span t-if="partner.city and partner.state_id"> </span>
-                        <span t-if="partner.state_id" t-esc="partner.state_id.name"/>
-                    </div>
-                    <div t-if="partner.zip">
-                        <span t-esc="partner.zip"/>
-                    </div>
-                    <div t-if="partner.country_id">
-                        <span t-esc="partner.country_id.name"/>
-                    </div>
-                </div>
-
-                <div class="consignment-order-clear"/>
-            </div>
-        </div>
-
-        <div t-attf-class="article o_report_layout_standard o_table_standard o_company_#{company.id}_layout"
-             t-att-data-oe-model="o and o._name"
-             t-att-data-oe-id="o and o.id"
-             t-att-data-oe-lang="o and o.env.context.get('lang')">
+        <t t-call="tha_consignment_sale.consignment_order_layout_a4">
             <t t-out="0"/>
-        </div>
-
-        <div t-attf-class="footer o_company_#{company.id}_layout">
-            <div class="o_footer_content"/>
-        </div>
+        </t>
     </template>
 </odoo>
