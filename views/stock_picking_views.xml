@@ -1,10 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="view_tha_consignment_transfer_search" model="ir.ui.view">
+        <field name="name">stock.picking.consignment.search</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='backorder']" position="after">
+                <filter name="consignment_orders"
+                        string="Orders"
+                        domain="[('tha_consignment_order_id', '!=', False), ('return_id', '=', False)]"/>
+                <filter name="consignment_settlements"
+                        string="Settlements"
+                        domain="[('tha_consignment_settlement_id', '!=', False)]"/>
+                <filter name="consignment_returns"
+                        string="Returns"
+                        domain="[('tha_is_consignment_transfer', '=', True), ('return_id', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="action_tha_consignment_transfer" model="ir.actions.act_window">
         <field name="name">Consignment Transfers</field>
         <field name="res_model">stock.picking</field>
         <field name="view_mode">list,form</field>
         <field name="domain">["|", ("tha_is_consignment_transfer", "=", True), ("tha_consignment_order_id", "!=", False)]</field>
+        <field name="search_view_id" ref="view_tha_consignment_transfer_search"/>
         <field name="context">{'create': False}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

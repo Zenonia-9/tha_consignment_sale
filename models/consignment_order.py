@@ -538,7 +538,7 @@ class ThaConsignmentOrderLine(models.Model):
         search="_search_product_template_id",
         domain=lambda self: self._fields["product_id"]._description_domain(self.env),
     )
-    name = fields.Text(string="Description", required=True)
+    name = fields.Text(string="Description")
     product_uom_qty = fields.Float(string="Quantity", default=1.0, digits="Product Unit")
     product_uom_id = fields.Many2one(
         "uom.uom",
