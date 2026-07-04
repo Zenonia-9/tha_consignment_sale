@@ -32,12 +32,15 @@
             <form string="Consignment Order">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="not can_reset_to_draft"/>
                     <button name="action_open_settle_wizard" type="object" string="Settle" class="btn-primary" invisible="not can_settle"/>
                     <button name="action_open_print_wizard" type="object" string="Print" invisible="state == 'cancel'"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
+                    <field name="can_reset_to_draft" invisible="1"/>
+                    <field name="can_settle" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_transfer" type="object" class="oe_stat_button" icon="fa-truck" invisible="not transfer_count">
                             <field name="transfer_count" widget="statinfo" string="Delivery"/>
@@ -61,6 +64,7 @@
                                    readonly="state != 'draft'"/>
                             <field name="source_warehouse_id" readonly="state != 'draft'"/>
                             <field name="source_location_id" readonly="state != 'draft'"/>
+                            <field name="user_id" widget="many2one_avatar_user" readonly="state != 'draft'"/>
                         </group>
                         <group>
                             <field name="date_order" readonly="state != 'draft'"/>
@@ -106,9 +110,9 @@
                         <page string="Other Info" name="other_information">
                             <group>
                                 <group string="Sales">
-                                    <field name="user_id" widget="many2one_avatar_user" readonly="state == 'cancel'"/>
-                                    <field name="team_id" readonly="state == 'cancel'" options="{'no_create': True}"/>
-                                    <field name="company_id" readonly="state == 'cancel'" groups="base.group_multi_company"/>
+                                    <field name="user_id" widget="many2one_avatar_user" readonly="state != 'draft'"/>
+                                    <field name="team_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+                                    <field name="company_id" readonly="state != 'draft'" groups="base.group_multi_company"/>
                                 </group>
                                 <group string="Delivery">
                                     <field name="transfer_state" readonly="1" widget="badge"

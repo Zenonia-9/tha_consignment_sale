@@ -63,6 +63,7 @@ class ThaConsignmentSettlement(models.Model):
     )
     invoice_count = fields.Integer(compute="_compute_document_counts")
     commission_bill_count = fields.Integer(compute="_compute_document_counts")
+    can_reset_to_draft = fields.Boolean(compute="_compute_can_reset_to_draft")
     amount_total = fields.Monetary(compute="_compute_amounts", store=True)
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
     net_amount = fields.Monetary(compute="_compute_amounts", store=True)
@@ -99,6 +100,19 @@ class ThaConsignmentSettlement(models.Model):
         for settlement in self:
             settlement.invoice_count = 1 if settlement.invoice_id else 0
             settlement.commission_bill_count = 1 if settlement.commission_bill_id else 0
+
+    @api.depends("state", "picking_id.state", "invoice_id.state", "commission_bill_id.state")
+    def _compute_can_reset_to_draft(self):
+        for settlement in self:
+            active_moves = (settlement.invoice_id | settlement.commission_bill_id).filtered(
+                lambda move: move.state != "cancel"
+            )
+            settlement.can_reset_to_draft = (
+                settlement.state == "confirmed"
+                and settlement.picking_id
+                and settlement.picking_id.state != "done"
+                and not active_moves
+            )
 
     @api.constrains("name", "company_id")
     def _check_unique_name(self):
@@ -206,6 +220,25 @@ class ThaConsignmentSettlement(models.Model):
             if settlement.picking_id and settlement.picking_id.state != "cancel":
                 settlement.picking_id.action_cancel()
             settlement.state = "cancel"
+        return True
+
+    def action_reset_to_draft(self):
+        for settlement in self:
+            if settlement.state != "confirmed":
+                continue
+            if settlement.picking_id and settlement.picking_id.state == "done":
+                raise UserError(_("You cannot reset %s to draft because its delivery is done.") % settlement.display_name)
+            active_moves = (settlement.invoice_id | settlement.commission_bill_id).filtered(lambda move: move.state != "cancel")
+            if active_moves:
+                raise UserError(_("Cancel the linked invoice and bill before resetting %s to draft.") % settlement.display_name)
+            if settlement.picking_id and settlement.picking_id.state != "cancel":
+                settlement.picking_id.action_cancel()
+            if settlement.picking_id and settlement.picking_id.state == "cancel":
+                settlement.picking_id.unlink()
+            settlement.write({
+                "state": "draft",
+                "picking_id": False,
+            })
         return True
 
     def unlink(self):

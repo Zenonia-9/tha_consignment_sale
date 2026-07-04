@@ -40,12 +40,14 @@
             <form string="Consignment Settlement">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm Settlement" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="not can_reset_to_draft"/>
                     <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-primary" invisible="state != 'confirmed' or invoice_id"/>
                     <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-primary" invisible="state != 'confirmed' or commission_amount == 0 or commission_bill_id"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
+                    <field name="can_reset_to_draft" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_order" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not order_id">
                             <span class="o_stat_text">Consignment Order</span>
@@ -69,6 +71,7 @@
                             <field name="order_id" readonly="1"/>
                             <field name="settlement_date" readonly="state != 'draft'"/>
                             <field name="warehouse_id" readonly="state != 'draft'"/>
+                            <field name="user_id" widget="many2one_avatar_user" readonly="state != 'draft'"/>
                         </group>
                         <group>
                             <field name="pricelist_id" readonly="state != 'draft'"/>
@@ -112,15 +115,15 @@
                         <page string="Other Info" name="other_information">
                             <group>
                                 <group string="Sales">
-                                    <field name="user_id" widget="many2one_avatar_user"/>
-                                    <field name="team_id" options="{'no_create': True}"/>
-                                    <field name="company_id" groups="base.group_multi_company"/>
+                                    <field name="user_id" widget="many2one_avatar_user" readonly="state != 'draft'"/>
+                                    <field name="team_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+                                    <field name="company_id" readonly="state != 'draft'" groups="base.group_multi_company"/>
                                 </group>
                                 <group string="Invoicing">
-                                    <field name="partner_invoice_id"/>
-                                    <field name="payment_term_id"/>
-                                    <field name="fiscal_position_id"/>
-                                    <field name="journal_id"/>
+                                    <field name="partner_invoice_id" readonly="state != 'draft'"/>
+                                    <field name="payment_term_id" readonly="state != 'draft'"/>
+                                    <field name="fiscal_position_id" readonly="state != 'draft'"/>
+                                    <field name="journal_id" readonly="state != 'draft'"/>
                                     <field name="invoice_status" widget="badge"
                                         decoration-success="invoice_status == 'invoiced'"
                                         decoration-info="invoice_status == 'to invoice'"/>

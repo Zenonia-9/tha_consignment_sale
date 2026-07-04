@@ -110,6 +110,7 @@ class ThaConsignmentOrder(models.Model):
     settlement_count = fields.Integer(compute="_compute_settlement_summary", string="Settlements")
     return_count = fields.Integer(compute="_compute_return_summary", string="Returns")
     can_settle = fields.Boolean(compute="_compute_can_settle")
+    can_reset_to_draft = fields.Boolean(compute="_compute_can_reset_to_draft")
     line_ids = fields.One2many("tha.consignment.order.line", "order_id", string="Order Lines", copy=True)
     amount_total = fields.Monetary(compute="_compute_amounts", store=True)
     commission_amount = fields.Monetary(compute="_compute_amounts", store=True)
@@ -181,6 +182,17 @@ class ThaConsignmentOrder(models.Model):
                     ) > 0
                     for line in order.line_ids.filtered(lambda line: not line.display_type)
                 )
+            )
+
+    @api.depends("state", "picking_ids.state", "settlement_ids.state")
+    def _compute_can_reset_to_draft(self):
+        for order in self:
+            active_settlements = order.settlement_ids.filtered(lambda settlement: settlement.state != "cancel")
+            done_deliveries = order.picking_ids.filtered(lambda picking: not picking.return_id and picking.state == "done")
+            order.can_reset_to_draft = (
+                order.state == "confirmed"
+                and not active_settlements
+                and not done_deliveries
             )
 
     @api.constrains("name", "company_id")
@@ -334,6 +346,28 @@ class ThaConsignmentOrder(models.Model):
             if pickings_to_cancel:
                 pickings_to_cancel.action_cancel()
             order.state = "cancel"
+        return True
+
+    def action_reset_to_draft(self):
+        for order in self:
+            if order.state != "confirmed":
+                continue
+            active_settlements = order.settlement_ids.filtered(lambda settlement: settlement.state != "cancel")
+            if active_settlements:
+                raise UserError(_("Cancel linked settlements before resetting %s to draft.") % order.display_name)
+            done_deliveries = order.picking_ids.filtered(lambda picking: not picking.return_id and picking.state == "done")
+            if done_deliveries:
+                raise UserError(_("You cannot reset %s to draft because at least one delivery is done.") % order.display_name)
+            pickings_to_remove = order.picking_ids.filtered(lambda picking: picking.state != "cancel")
+            if pickings_to_remove:
+                pickings_to_remove.action_cancel()
+            all_pickings_to_remove = order.picking_ids.filtered(lambda picking: picking.state == "cancel")
+            if all_pickings_to_remove:
+                all_pickings_to_remove.unlink()
+            order.write({
+                "state": "draft",
+                "picking_id": False,
+            })
         return True
 
     def unlink(self):
@@ -596,6 +630,30 @@ class ThaConsignmentOrderLine(models.Model):
                 ("state", "=", "done"),
                 ("picking_id.return_id", "=", False),
             ])
+            if not delivered_moves:
+                sibling_lines = line.order_id.line_ids.filtered(
+                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
+                )
+                if len(sibling_lines) == 1:
+                    delivered_moves = StockMove.search([
+                        ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
+                        ("picking_id.return_id", "=", False),
+                        ("product_id", "=", line.product_id.id),
+                        ("tha_consignment_order_line_id", "=", False),
+                        ("state", "=", "done"),
+                    ])
+            elif line.order_id and len(
+                line.order_id.line_ids.filtered(
+                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
+                )
+            ) == 1:
+                delivered_moves |= StockMove.search([
+                    ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
+                    ("picking_id.return_id", "=", False),
+                    ("product_id", "=", line.product_id.id),
+                    ("tha_consignment_order_line_id", "=", False),
+                    ("state", "=", "done"),
+                ])
             returned_moves = StockMove.search([
                 ("origin_returned_move_id.tha_consignment_order_line_id", "=", line.id),
                 ("picking_id.tha_consignment_order_id", "=", line.order_id.id),

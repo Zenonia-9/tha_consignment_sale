@@ -39,3 +39,11 @@ class StockMove(models.Model):
 
     tha_consignment_order_line_id = fields.Many2one("tha.consignment.order.line", string="Consignment Order Line", copy=False)
     tha_consignment_settlement_line_id = fields.Many2one("tha.consignment.settlement.line", string="Consignment Settlement Line", copy=False)
+
+    def _prepare_move_split_vals(self, qty):
+        vals = super()._prepare_move_split_vals(qty)
+        vals.update({
+            "tha_consignment_order_line_id": self.tha_consignment_order_line_id.id,
+            "tha_consignment_settlement_line_id": self.tha_consignment_settlement_line_id.id,
+        })
+        return vals
