@@ -153,8 +153,8 @@
                     <tr>
                         <td style="width:25%; vertical-align:top; border:1px solid #000; padding:6px 8px 10px 8px;">
                             <strong>Sales Person</strong>
-                            <div style="margin-top:45px;">Sign ........................................</div>
-                            <div style="margin-top:15px;">
+                            <div style="margin-top:30px;">Sign ........................................</div>
+                            <div style="margin-top:10px;">
                                 Name
                                 <t t-if="o.user_id">
                                     <span t-esc="' %s' % o.user_id.name"/>
@@ -164,18 +164,18 @@
                         </td>
                         <td style="width:25%; vertical-align:top; border:1px solid #000; padding:6px 8px 10px 8px;">
                             <strong>Checked By</strong>
-                            <div style="margin-top:45px;">Sign ........................................</div>
-                            <div style="margin-top:15px;">Name ........................................</div>
+                            <div style="margin-top:30px;">Sign ........................................</div>
+                            <div style="margin-top:10px;">Name ........................................</div>
                         </td>
                         <td style="width:25%; vertical-align:top; border:1px solid #000; padding:6px 8px 10px 8px;">
                             <strong>Received By</strong>
-                            <div style="margin-top:45px;">Sign ........................................</div>
-                            <div style="margin-top:15px;">Name ........................................</div>
+                            <div style="margin-top:30px;">Sign ........................................</div>
+                            <div style="margin-top:10px;">Name ........................................</div>
                         </td>
                         <td style="width:25%; vertical-align:top; border:1px solid #000; padding:6px 8px 10px 8px;">
                             <strong>Delivered By</strong>
-                            <div style="margin-top:45px;">Sign ........................................</div>
-                            <div style="margin-top:15px;">Name ........................................</div>
+                            <div style="margin-top:30px;">Sign ........................................</div>
+                            <div style="margin-top:10px;">Name ........................................</div>
                         </td>
                     </tr>
                 </table>
@@ -195,9 +195,9 @@
                 <t t-call="web.basic_layout">
                     <t t-call="tha_consignment_sale.consignment_order_report_body">
                         <t t-set="font_size" t-value="'13px'"/>
-                        <t t-set="top_padding" t-value="'155px'"/>
-                        <t t-set="page_height" t-value="'340mm'"/>
-                        <t t-set="sign_bottom" t-value="'30mm'"/>
+                        <t t-set="top_padding" t-value="'132px'"/>
+                        <t t-set="page_height" t-value="'276mm'"/>
+                        <t t-set="sign_bottom" t-value="'18mm'"/>
                     </t>
                 </t>
             </t>
@@ -209,10 +209,10 @@
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.basic_layout">
                     <t t-call="tha_consignment_sale.consignment_order_report_body">
-                        <t t-set="font_size" t-value="'9.5px'"/>
-                        <t t-set="top_padding" t-value="'118px'"/>
-                        <t t-set="page_height" t-value="'235mm'"/>
-                        <t t-set="sign_bottom" t-value="'22mm'"/>
+                        <t t-set="font_size" t-value="'8.5px'"/>
+                        <t t-set="top_padding" t-value="'96px'"/>
+                        <t t-set="page_height" t-value="'186mm'"/>
+                        <t t-set="sign_bottom" t-value="'16mm'"/>
                     </t>
                 </t>
             </t>
