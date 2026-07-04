@@ -6,7 +6,7 @@ class ThaConsignmentOrderPrintWizard(models.TransientModel):
     _name = "tha.consignment.order.print.wizard"
     _description = "Consignment Order Print Wizard"
 
-    shop_name = fields.Char(string="Shop", readonly=True)
+    shop_name = fields.Char(string="Customer", readonly=True)
     order_count = fields.Integer(string="Selected Orders", readonly=True)
     paper_size = fields.Selection(
         selection=[

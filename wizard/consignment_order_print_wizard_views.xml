@@ -8,7 +8,6 @@
                 <group>
                     <group>
                         <field name="shop_name"/>
-                        <field name="order_count"/>
                     </group>
                     <group>
                         <field name="paper_size" widget="radio" options="{'horizontal': True}"/>
