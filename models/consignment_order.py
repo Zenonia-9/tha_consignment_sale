@@ -660,6 +660,32 @@ class ThaConsignmentOrderLine(models.Model):
                 ("picking_id.return_id", "!=", False),
                 ("state", "=", "done"),
             ])
+            if not returned_moves:
+                sibling_lines = line.order_id.line_ids.filtered(
+                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
+                )
+                if len(sibling_lines) == 1:
+                    returned_moves = StockMove.search([
+                        ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
+                        ("picking_id.return_id", "!=", False),
+                        ("product_id", "=", line.product_id.id),
+                        ("origin_returned_move_id.tha_consignment_order_line_id", "=", False),
+                        ("tha_consignment_order_line_id", "=", False),
+                        ("state", "=", "done"),
+                    ])
+            elif line.order_id and len(
+                line.order_id.line_ids.filtered(
+                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
+                )
+            ) == 1:
+                returned_moves |= StockMove.search([
+                    ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
+                    ("picking_id.return_id", "!=", False),
+                    ("product_id", "=", line.product_id.id),
+                    ("origin_returned_move_id.tha_consignment_order_line_id", "=", False),
+                    ("tha_consignment_order_line_id", "=", False),
+                    ("state", "=", "done"),
+                ])
             settlement_lines = SettlementLine.search([
                 ("order_line_id", "=", line.id),
                 ("settlement_id.state", "!=", "cancel"),

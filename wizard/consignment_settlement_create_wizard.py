@@ -136,6 +136,26 @@ class ThaConsignmentSettlementCreateWizardLine(models.TransientModel):
             raise UserError(_("Settlement quantity cannot exceed remaining quantity for %s.") % self.product_id.display_name)
 
 
+class StockReturnPickingLine(models.TransientModel):
+    _inherit = "stock.return.picking.line"
+
+    def _prepare_move_default_values(self, new_picking):
+        vals = super()._prepare_move_default_values(new_picking)
+        order_line = self.move_id.tha_consignment_order_line_id
+        settlement_line = self.move_id.tha_consignment_settlement_line_id
+        if not order_line and self.wizard_id.picking_id.tha_consignment_order_id:
+            sibling_lines = self.wizard_id.picking_id.tha_consignment_order_id.line_ids.filtered(
+                lambda line: not line.display_type and line.product_id == self.product_id
+            )
+            if len(sibling_lines) == 1:
+                order_line = sibling_lines
+        if order_line:
+            vals["tha_consignment_order_line_id"] = order_line.id
+        if settlement_line:
+            vals["tha_consignment_settlement_line_id"] = settlement_line.id
+        return vals
+
+
 class StockReturnPicking(models.TransientModel):
     _inherit = "stock.return.picking"
 
