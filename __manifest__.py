@@ -38,7 +38,6 @@ Installation
         "views/stock_picking_views.xml",
         "views/menu_views.xml",
         "report/paperformat.xml",
-        "report/consignment_order_layout.xml",
         "report/consignment_order_report.xml",
     ],
     "installable": True,
