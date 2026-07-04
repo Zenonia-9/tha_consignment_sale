@@ -32,11 +32,12 @@
             <form string="Consignment Order">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="not can_reset_to_draft"/>
                     <button name="action_open_settle_wizard" type="object" string="Settle" class="btn-primary" invisible="not can_settle"/>
                     <button name="action_open_print_wizard" type="object" string="Print" invisible="state == 'cancel'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="not can_reset_to_draft"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                    <field name="can_reset_to_draft" invisible="1"/>
                 </header>
                 <sheet>
                     <field name="can_reset_to_draft" invisible="1"/>

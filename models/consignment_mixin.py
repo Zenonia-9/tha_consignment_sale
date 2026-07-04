@@ -89,10 +89,31 @@ class ThaConsignmentMixin(models.AbstractModel):
             if self.search_count(domain):
                 raise ValidationError(_("Document number %s must be unique per company.") % record.name)
 
+    def _sync_stock_picking_sequence_next(self, sequence, company):
+        company = company or self.env.company
+        if not sequence or not sequence.prefix:
+            return sequence
+        Picking = self.env["stock.picking"].sudo().with_company(company)
+        prefix = sequence.prefix
+        pickings = Picking.search([
+            ("company_id", "=", company.id),
+            ("name", "=like", "%s%%" % prefix),
+        ])
+        max_number = 0
+        for picking in pickings:
+            suffix = (picking.name or "")[len(prefix):]
+            if suffix.isdigit():
+                max_number = max(max_number, int(suffix))
+        next_number = max_number + 1
+        if sequence.number_next_actual <= next_number:
+            sequence.sudo().write({"number_next_actual": next_number})
+        return sequence
+
     def _consignment_picking_type(self, flow, name, code, sequence_code, sequence_xmlid, source_location, destination_location, company=False):
         company = company or self.env.company
         PickingType = self.env["stock.picking.type"].sudo().with_company(company)
         sequence = self._company_sequence_from_template(sequence_xmlid, company)
+        self._sync_stock_picking_sequence_next(sequence, company)
         supported_flows = {key for key, _label in PickingType._fields["tha_consignment_flow"].selection}
         flow_supported = flow in supported_flows
         domain = [

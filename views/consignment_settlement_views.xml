@@ -40,11 +40,12 @@
             <form string="Consignment Settlement">
                 <header>
                     <button name="action_confirm" type="object" string="Confirm Settlement" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="not can_reset_to_draft"/>
                     <button name="action_create_invoice" type="object" string="Create Invoice" class="btn-primary" invisible="state != 'confirmed' or invoice_id"/>
                     <button name="action_create_commission_bill" type="object" string="Create Bill" class="btn-primary" invisible="state != 'confirmed' or commission_amount == 0 or commission_bill_id"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="not can_reset_to_draft"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancel'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                    <field name="can_reset_to_draft" invisible="1"/>
                 </header>
                 <sheet>
                     <field name="can_reset_to_draft" invisible="1"/>
