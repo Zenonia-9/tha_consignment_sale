@@ -29,7 +29,7 @@
         <t t-if="not letterhead">
             <t t-set="letterhead"
                t-value="o.env['ir.attachment'].sudo().search([
-                    ('name', 'in', ['invoice_letterhead.png', 'consignment_order_letterhead.png', 'ytk_consignment_header.png']),
+                    ('name', 'in', ['ytk_header.png']),
                     ('mimetype', 'ilike', 'image')
                ], order='id desc', limit=1)"/>
         </t>
@@ -193,22 +193,28 @@
                 <div t-attf-style="position:absolute; left:0; right:0; bottom:#{signature_bottom}; width:100%; z-index:2; page-break-inside:avoid;">
                     <table t-attf-style="width:100%; text-align:center; border-collapse:collapse; font-size:#{font_size};">
                         <tr>
-                            <td style="width:33%; vertical-align:top; border:none;">
-                                <strong>Delivery by:</strong>
-                                <div style="margin-top:45px;">Sign ........................................</div>
-                                <div style="margin-top:15px;">Name ........................................</div>
+                            <td style="width:25%; vertical-align:top; border:none;">
+                                <strong>Stock Issued By:</strong>
+                                <div style="margin-top:45px;">Sign ................................</div>
+                                <div style="margin-top:15px;">Name ................................</div>
                             </td>
 
-                            <td style="width:33%; vertical-align:top; border:none;">
-                                <strong>Goods received by:</strong>
-                                <div style="margin-top:45px;">Sign ........................................</div>
-                                <div style="margin-top:15px;">Name ........................................</div>
+                            <td style="width:25%; vertical-align:top; border:none;">
+                                <strong>Checked By:</strong>
+                                <div style="margin-top:45px;">Sign ................................</div>
+                                <div style="margin-top:15px;">Name ................................</div>
                             </td>
 
-                            <td style="width:33%; vertical-align:top; border:none;">
-                                <strong>Cash received by:</strong>
-                                <div style="margin-top:45px;">Sign ........................................</div>
-                                <div style="margin-top:15px;">Name ........................................</div>
+                            <td style="width:25%; vertical-align:top; border:none;">
+                                <strong>Received By:</strong>
+                                <div style="margin-top:45px;">Sign ................................</div>
+                                <div style="margin-top:15px;">Name ................................</div>
+                            </td>
+
+                            <td style="width:25%; vertical-align:top; border:none;">
+                                <strong>Delivered By:</strong>
+                                <div style="margin-top:45px;">Sign ................................</div>
+                                <div style="margin-top:15px;">Name ................................</div>
                             </td>
                         </tr>
                     </table>
