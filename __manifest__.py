@@ -1,7 +1,7 @@
 {
     "name": "Consignment Sale",
     "summary": "Order-driven consignment deliveries, settlements, returns, and commission flow",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Inventory",
     "author": "Thein Htoo Aung",
     "license": "LGPL-3",
