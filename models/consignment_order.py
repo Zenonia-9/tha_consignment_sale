@@ -617,80 +617,83 @@ class ThaConsignmentOrderLine(models.Model):
         StockMove = self.env["stock.move"].sudo()
         SettlementLine = self.env["tha.consignment.settlement.line"].sudo()
         for line in self:
-            if line.display_type or not line.product_id:
-                line.qty_delivered = 0.0
-                line.qty_invoiced = 0.0
-                line.qty_returned = 0.0
-                line.qty_settled = 0.0
-                line.remaining_qty = 0.0
+            line.qty_delivered = 0.0
+            line.qty_invoiced = 0.0
+            line.qty_returned = 0.0
+            line.qty_settled = 0.0
+            line.remaining_qty = 0.0
+
+        valid_lines = self.filtered(lambda line: not line.display_type and line.product_id)
+        if not valid_lines:
+            return
+
+        valid_line_ids = set(valid_lines.ids)
+        empty_order_line = self.env["tha.consignment.order.line"]
+        unique_line_by_order_product = {}
+        for order in valid_lines.mapped("order_id"):
+            order_lines_by_product = {}
+            for order_line in order.line_ids.filtered(lambda line: not line.display_type and line.product_id):
+                product_id = order_line.product_id.id
+                order_lines_by_product[product_id] = (
+                    False if product_id in order_lines_by_product else order_line
+                )
+            unique_line_by_order_product.update({
+                (order.id, product_id): order_line
+                for product_id, order_line in order_lines_by_product.items()
+                if order_line
+            })
+
+        delivered_move_ids_by_line = {line.id: [] for line in valid_lines}
+        returned_move_ids_by_line = {line.id: [] for line in valid_lines}
+        stock_moves = StockMove.search([
+            ("state", "=", "done"),
+            "|", "|",
+            ("tha_consignment_order_line_id", "in", valid_lines.ids),
+            ("origin_returned_move_id.tha_consignment_order_line_id", "in", valid_lines.ids),
+            ("picking_id.tha_consignment_order_id", "in", valid_lines.order_id.ids),
+        ])
+        for move in stock_moves:
+            picking = move.picking_id
+            if picking.return_id:
+                line = move.origin_returned_move_id.tha_consignment_order_line_id
+                if not (line.id in valid_line_ids and picking.tha_consignment_order_id == line.order_id):
+                    line = empty_order_line
+                    if (
+                        not move.origin_returned_move_id.tha_consignment_order_line_id
+                        and not move.tha_consignment_order_line_id
+                    ):
+                        line = unique_line_by_order_product.get(
+                            (picking.tha_consignment_order_id.id, move.product_id.id),
+                            empty_order_line,
+                        )
+                if line.id in valid_line_ids:
+                    returned_move_ids_by_line[line.id].append(move.id)
                 continue
 
-            delivered_moves = StockMove.search([
-                ("tha_consignment_order_line_id", "=", line.id),
-                ("state", "=", "done"),
-                ("picking_id.return_id", "=", False),
-            ])
-            if not delivered_moves:
-                sibling_lines = line.order_id.line_ids.filtered(
-                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
-                )
-                if len(sibling_lines) == 1:
-                    delivered_moves = StockMove.search([
-                        ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
-                        ("picking_id.return_id", "=", False),
-                        ("product_id", "=", line.product_id.id),
-                        ("tha_consignment_order_line_id", "=", False),
-                        ("state", "=", "done"),
-                    ])
-            elif line.order_id and len(
-                line.order_id.line_ids.filtered(
-                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
-                )
-            ) == 1:
-                delivered_moves |= StockMove.search([
-                    ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
-                    ("picking_id.return_id", "=", False),
-                    ("product_id", "=", line.product_id.id),
-                    ("tha_consignment_order_line_id", "=", False),
-                    ("state", "=", "done"),
-                ])
-            returned_moves = StockMove.search([
-                ("origin_returned_move_id.tha_consignment_order_line_id", "=", line.id),
-                ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
-                ("picking_id.return_id", "!=", False),
-                ("state", "=", "done"),
-            ])
-            if not returned_moves:
-                sibling_lines = line.order_id.line_ids.filtered(
-                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
-                )
-                if len(sibling_lines) == 1:
-                    returned_moves = StockMove.search([
-                        ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
-                        ("picking_id.return_id", "!=", False),
-                        ("product_id", "=", line.product_id.id),
-                        ("origin_returned_move_id.tha_consignment_order_line_id", "=", False),
-                        ("tha_consignment_order_line_id", "=", False),
-                        ("state", "=", "done"),
-                    ])
-            elif line.order_id and len(
-                line.order_id.line_ids.filtered(
-                    lambda sibling_line: not sibling_line.display_type and sibling_line.product_id == line.product_id
-                )
-            ) == 1:
-                returned_moves |= StockMove.search([
-                    ("picking_id.tha_consignment_order_id", "=", line.order_id.id),
-                    ("picking_id.return_id", "!=", False),
-                    ("product_id", "=", line.product_id.id),
-                    ("origin_returned_move_id.tha_consignment_order_line_id", "=", False),
-                    ("tha_consignment_order_line_id", "=", False),
-                    ("state", "=", "done"),
-                ])
-            settlement_lines = SettlementLine.search([
-                ("order_line_id", "=", line.id),
-                ("settlement_id.state", "!=", "cancel"),
-            ])
-            invoiced_lines = settlement_lines.filtered(
+            line = move.tha_consignment_order_line_id
+            if line.id not in valid_line_ids:
+                line = empty_order_line
+                if not move.tha_consignment_order_line_id:
+                    line = unique_line_by_order_product.get(
+                        (picking.tha_consignment_order_id.id, move.product_id.id),
+                        empty_order_line,
+                    )
+            if line.id in valid_line_ids:
+                delivered_move_ids_by_line[line.id].append(move.id)
+
+        settlement_line_ids_by_order_line = {line.id: [] for line in valid_lines}
+        settlement_lines = SettlementLine.search([
+            ("order_line_id", "in", valid_lines.ids),
+            ("settlement_id.state", "!=", "cancel"),
+        ])
+        for settlement_line in settlement_lines:
+            settlement_line_ids_by_order_line[settlement_line.order_line_id.id].append(settlement_line.id)
+
+        for line in valid_lines:
+            delivered_moves = StockMove.browse(delivered_move_ids_by_line[line.id])
+            returned_moves = StockMove.browse(returned_move_ids_by_line[line.id])
+            line_settlement_lines = SettlementLine.browse(settlement_line_ids_by_order_line[line.id])
+            invoiced_lines = line_settlement_lines.filtered(
                 lambda settlement_line: settlement_line.settlement_id.invoice_id
                 and settlement_line.settlement_id.invoice_id.state != "cancel"
             )
@@ -702,7 +705,7 @@ class ThaConsignmentOrderLine(models.Model):
                     settlement_line.product_uom_qty,
                     line.product_uom_id,
                 )
-                for settlement_line in settlement_lines
+                for settlement_line in line_settlement_lines
             )
             line.qty_invoiced = sum(
                 settlement_line.product_uom_id._compute_quantity(
